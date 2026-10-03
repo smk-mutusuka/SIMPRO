@@ -4,30 +4,25 @@
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPRO - Professional Teacher Supervision System</title>
-    <!-- Font & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Script Grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <?!= include('CSS'); ?>
   </head>
   <body>
     <!-- Toast Notification -->
     <div id="toast-container"></div>
-    
-    <!-- Login Page -->
-    <?!= include('Login'); ?>
+
+    <!-- Login Page (dari Login.html) -->
+    <div data-include="Login.html"></div>
 
     <!-- Main Application -->
     <div class="layout" id="app-layout" style="display:none;">
-      
+
       <!-- Sidebar -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header" style="text-align: center; padding: 20px 0;">
           <div class="logo">
-             <img src="https://drive.google.com/thumbnail?id=1vBEF6Ey6Rp_MX35BSzZeEx4gYGnioQod&sz=w400" alt="Logo SIMPRO" style="width: 130px; height: auto; margin: 0 auto;">
+            <img src="https://drive.google.com/thumbnail?id=1vBEF6Ey6Rp_MX35BSzZeEx4gYGnioQod&sz=w400" alt="Logo SIMPRO" style="width: 130px; height: auto; margin: 0 auto;">
           </div>
         </div>
         <ul class="sidebar-menu" id="sidebar-menu"></ul>
@@ -35,18 +30,16 @@
 
       <!-- Main Content -->
       <main class="main-content">
-        
-        <!-- HEADER DIPERBAIKI (POSISI KIRI & KANAN PRESISI) -->
+
         <header class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: white; border-bottom: 1px solid #eef0f4; width: 100%; box-sizing: border-box;">
-          
           <div style="display: flex; align-items: center; gap: 15px;">
             <button class="mobile-toggle" onclick="toggleSidebar()" style="background: none; border: 1px solid #ccc; padding: 4px 10px; border-radius: 4px; cursor: pointer; color: var(--primary-navy);"><i class="fas fa-bars"></i></button>
             <h2 id="page-title" style="margin: 0; color: var(--primary-navy); font-size: 22px; font-weight: 700;">Dashboard</h2>
           </div>
-          
+
           <div class="header-right" style="display: flex; gap: 15px; align-items: center;">
             <div class="user-profile" style="color: var(--primary-navy); font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px;">
-              <i class="fas fa-user-circle" style="font-size: 22px;"></i> 
+              <i class="fas fa-user-circle" style="font-size: 22px;"></i>
               <span id="welcome-user">Admin</span>
             </div>
             <button class="btn-sm" style="background: #e3f2fd; color: #1756a9; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px;" onclick="openPasswordModal()">
@@ -56,17 +49,16 @@
               <i class="fas fa-sign-out-alt"></i> Keluar
             </button>
           </div>
-          
         </header>
 
         <div class="content">
-          <?!= include('Dashboard'); ?>
-          <?!= include('Guru'); ?>
-          <?!= include('Jadwal'); ?>
-          <?!= include('Observasi'); ?>
-          <?!= include('TindakLanjut'); ?>
-          <?!= include('Laporan'); ?>
-          <?!= include('Instrumen'); ?>
+          <div data-include="Dashboard.html"></div>
+          <div data-include="Guru.html"></div>
+          <div data-include="Jadwal.html"></div>
+          <div data-include="Observasi.html"></div>
+          <div data-include="TindakLanjut.html"></div>
+          <div data-include="Laporan.html"></div>
+          <div data-include="Instrumen.html"></div>
         </div>
       </main>
     </div>
@@ -94,6 +86,9 @@
       </div>
     </div>
 
-    <?!= include('JS'); ?>
+    <!-- Scripts — URUTAN JANGAN DIBALIK -->
+    <script src="api.js"></script>
+    <script src="google-polyfill.js"></script>
+    <script src="JS.js"></script>
   </body>
 </html>
