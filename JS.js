@@ -85,12 +85,10 @@
     });
   }
   function filterGuruTable() { const kw = document.getElementById('search-guru').value.toLowerCase(); renderGuruTable(APP_STATE.gurus.filter(g => (g.NamaGuru && g.NamaGuru.toLowerCase().includes(kw)) || (g.NIP_NBM && g.NIP_NBM.toString().toLowerCase().includes(kw)))); }
-    function openModalGuru() {
+      function openModalGuru() {
     document.getElementById('formGuru').reset();
     document.getElementById('guru-id').value = '';
     document.getElementById('guru-nbm-lama').value = '';
-    document.getElementById('guru-jurusan-manual').value = '';
-    document.getElementById('guru-jurusan-manual').style.display = 'none';
     document.getElementById('modal-title-guru').innerText = 'Tambah Data Guru Baru';
     document.getElementById('modal-guru').style.display = 'flex';
   }
@@ -108,7 +106,7 @@
     }
   }
   function closeModalGuru() { document.getElementById('modal-guru').style.display = 'none'; }
-    function editGuru(guruID) {
+  function editGuru(guruID) {
     const guru = APP_STATE.gurus.find(g => g.GuruID === guruID); if(!guru) return;
     document.getElementById('guru-id').value = guru.GuruID;
     document.getElementById('guru-nbm-lama').value = guru.NIP_NBM;
@@ -122,19 +120,14 @@
     // ==== Set dropdown Program Keahlian ====
     const jurusan = guru.ProgramKeahlian || '';
     const selectEl = document.getElementById('guru-jurusan');
-    const manualEl = document.getElementById('guru-jurusan-manual');
-    const daftarOpsi = ['Teknik Pemesinan', 'Teknik Pengelasan', 'Teknik Kendaraan Ringan', 'Teknik Sepeda Motor'];
+    const daftarOpsi = ['Teknik Pemesinan', 'Teknik Pengelasan', 'Teknik Kendaraan Ringan', 'Teknik Sepeda Motor', 'Semua KK'];
 
-    if (jurusan === '' || daftarOpsi.indexOf(jurusan) !== -1) {
-      // Kosong atau ada di daftar → pakai dropdown langsung
+    if (daftarOpsi.indexOf(jurusan) !== -1) {
+      // Nilai ada di daftar → pilih langsung
       selectEl.value = jurusan;
-      manualEl.value = '';
-      manualEl.style.display = 'none';
     } else {
-      // Ada nilainya tapi bukan salah satu dari 4 opsi → pilih "Lainnya"
-      selectEl.value = '__LAINNYA__';
-      manualEl.value = jurusan;
-      manualEl.style.display = 'block';
+      // Nilai tidak ada di daftar (data lama) → kosongkan
+      selectEl.value = '';
     }
 
     document.getElementById('modal-title-guru').innerText = 'Edit Data Guru';
