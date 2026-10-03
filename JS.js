@@ -4,7 +4,7 @@
   const APP_STATE = { 
     user: null, isLoggedIn: false, gurus: [], jadwals: [], instrumens: [], allInstrumens: [], activeJadwal: null, tindakLanjut: [], laporanDetail: [], laporanView: []
   };
- 
+
   const MENU_CONFIG = [
     { id: 'dashboard', icon: 'fas fa-home', title: 'Dashboard', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU', 'KEPSEK', 'WAKA'] },
     { id: 'guru', icon: 'fas fa-chalkboard-teacher', title: 'Data Guru', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'] },
@@ -51,7 +51,7 @@
     if(pageId === 'observasi') loadSiapObservasi(); 
     if(pageId === 'tindak-lanjut') loadTindakLanjutData(); 
     if(pageId === 'laporan' || pageId === 'dashboard') loadLaporanData();
-    if(pageId === 'instrumen') loadInstrumenAdmin(); // Load CRUD Instrumen
+    if(pageId === 'instrumen') loadInstrumenAdmin();
   }
 
   function renderSidebar() {
@@ -112,8 +112,6 @@
     vw.forEach(jdw => {
       let aBtn = ""; 
       
-      // Tombol "Buka" sudah dihapus dari sini.
-      
       if(['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'].includes(APP_STATE.user.Role)) {
         aBtn += `<button class="btn-sm" style="background:#25D366; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAJadwal('${jdw.JadwalID}')"><i class="fab fa-whatsapp"></i> Kirim WA</button><br>`;
         aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; width:100%;" onclick="konfirmasiHapusJadwal('${jdw.JadwalID}')"><i class="fas fa-trash"></i> Hapus</button>`;
@@ -133,8 +131,6 @@
     
     flt.forEach(jdw => { 
       let aBtn = ""; 
-      
-      // Tombol "Buka" juga sudah dihapus dari fitur pencariannya.
 
       if(['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'].includes(APP_STATE.user.Role)) {
         aBtn += `<button class="btn-sm" style="background:#25D366; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAJadwal('${jdw.JadwalID}')"><i class="fab fa-whatsapp"></i> Kirim WA</button><br>`;
@@ -238,7 +234,6 @@
             APP_STATE.laporanDetail = res.data.detail; 
             renderLaporanSummary(res.data.summary); 
             filterLaporanTable(); 
-            // TAHAP 14: Memuat Chart di Dashboard
             renderDashboardCharts(res.data.detail);
         } 
     }).getRekapLaporan(); 
@@ -253,7 +248,6 @@
   function renderDashboardCharts(dataDetail) {
     if(!document.getElementById('pieChart')) return;
     
-    // --- 1. LOGIKA PIE CHART (PREDIKAT) ---
     let pieData = { "Sangat Baik": 0, "Baik": 0, "Cukup": 0, "Perlu Pengembangan": 0 };
     dataDetail.forEach(item => {
         if (pieData[item.Predikat] !== undefined) pieData[item.Predikat]++;
@@ -274,7 +268,6 @@
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
-    // --- 2. LOGIKA DATA LIST (2 KOLOM KATEGORI) ---
     const listAdmin = document.getElementById('list-administrasi');
     const listPelaksanaan = document.getElementById('list-pelaksanaan');
     
@@ -282,11 +275,9 @@
         listAdmin.innerHTML = '';
         listPelaksanaan.innerHTML = '';
         
-        // Memisahkan data berdasarkan jenis supervisi
         let adminData = dataDetail.filter(item => item.JenisSupervisi === 'Administrasi');
         let pelaksanaanData = dataDetail.filter(item => item.JenisSupervisi === 'Pelaksanaan');
         
-        // Memasukkan data ke Kolom Supervisi Administrasi
         if(adminData.length === 0) {
             listAdmin.innerHTML = '<li style="color:#999; list-style:none; margin-left:-20px; text-align:center; font-style:italic;">Belum ada data.</li>';
         } else {
@@ -295,7 +286,6 @@
             });
         }
         
-        // Memasukkan data ke Kolom Observasi Pembelajaran
         if(pelaksanaanData.length === 0) {
             listPelaksanaan.innerHTML = '<li style="color:#999; list-style:none; margin-left:-20px; text-align:center; font-style:italic;">Belum ada data.</li>';
         } else {
@@ -414,4 +404,14 @@
   function submitPasswordChange(e) { e.preventDefault(); const lama = document.getElementById('pass-lama').value, baru = document.getElementById('pass-baru').value, btn = document.getElementById('btn-save-pass'); if(baru.length < 4) return showToast("Password baru minimal 4 karakter!", "error"); btn.disabled = true; btn.innerText = 'Menyimpan...'; google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); btn.disabled = false; btn.innerText = 'Simpan Password Baru'; if(res.status === 'success') { showToast(res.message, 'success'); closePasswordModal(); } else showToast(res.message, 'error'); }).changePassword(APP_STATE.user.UserID, lama, baru); }
 
   function initApp() { document.getElementById('login-layout').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; document.getElementById('welcome-user').innerText = APP_STATE.user.Nama + ' (' + APP_STATE.user.Role + ')'; renderSidebar(); navigateTo('dashboard', 'Dashboard'); }
-  window.onload = function() { document.getElementById('app-layout').style.display = 'none'; const su = sessionStorage.getItem('simpro_user'); if(su) { APP_STATE.user = JSON.parse(su); APP_STATE.isLoggedIn = true; initApp(); } };
+
+  // ===== PERUBAHAN: tunggu includes-loaded, bukan window.onload =====
+  window.addEventListener('includes-loaded', function() {
+    document.getElementById('app-layout').style.display = 'none';
+    const su = sessionStorage.getItem('simpro_user');
+    if(su) {
+      APP_STATE.user = JSON.parse(su);
+      APP_STATE.isLoggedIn = true;
+      initApp();
+    }
+  });
