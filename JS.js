@@ -1,4 +1,3 @@
-<script>
   // ==========================================
   // 1. STATE & KONFIGURASI
   // ==========================================
@@ -416,4 +415,3 @@
 
   function initApp() { document.getElementById('login-layout').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; document.getElementById('welcome-user').innerText = APP_STATE.user.Nama + ' (' + APP_STATE.user.Role + ')'; renderSidebar(); navigateTo('dashboard', 'Dashboard'); }
   window.onload = function() { document.getElementById('app-layout').style.display = 'none'; const su = sessionStorage.getItem('simpro_user'); if(su) { APP_STATE.user = JSON.parse(su); APP_STATE.isLoggedIn = true; initApp(); } };
-</script>
