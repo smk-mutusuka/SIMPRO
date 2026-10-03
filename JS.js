@@ -4,7 +4,7 @@
   const APP_STATE = { 
     user: null, isLoggedIn: false, gurus: [], jadwals: [], instrumens: [], allInstrumens: [], activeJadwal: null, tindakLanjut: [], laporanDetail: [], laporanView: []
   };
-
+ 
   const MENU_CONFIG = [
     { id: 'dashboard', icon: 'fas fa-home', title: 'Dashboard', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU', 'KEPSEK', 'WAKA'] },
     { id: 'guru', icon: 'fas fa-chalkboard-teacher', title: 'Data Guru', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'] },
