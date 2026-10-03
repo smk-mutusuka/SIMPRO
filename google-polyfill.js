@@ -73,6 +73,8 @@
         el.innerHTML = '<!-- gagal load: ' + url + ' -->';
       }
     }
+    // ===== PERUBAHAN: tandai bahwa includes sudah selesai =====
+    window.__includesLoaded = true;
     document.dispatchEvent(new Event('includes-loaded'));
   }
 
