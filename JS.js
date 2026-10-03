@@ -87,14 +87,78 @@
   function filterGuruTable() { const kw = document.getElementById('search-guru').value.toLowerCase(); renderGuruTable(APP_STATE.gurus.filter(g => (g.NamaGuru && g.NamaGuru.toLowerCase().includes(kw)) || (g.NIP_NBM && g.NIP_NBM.toString().toLowerCase().includes(kw)))); }
   function openModalGuru() { document.getElementById('formGuru').reset(); document.getElementById('guru-id').value = ''; document.getElementById('guru-nbm-lama').value = ''; document.getElementById('modal-title-guru').innerText = 'Tambah Data Guru Baru'; document.getElementById('modal-guru').style.display = 'flex'; }
   function closeModalGuru() { document.getElementById('modal-guru').style.display = 'none'; }
-  function editGuru(guruID) {
+    function editGuru(guruID) {
     const guru = APP_STATE.gurus.find(g => g.GuruID === guruID); if(!guru) return;
-    document.getElementById('guru-id').value = guru.GuruID; document.getElementById('guru-nbm-lama').value = guru.NIP_NBM; document.getElementById('guru-nbm').value = guru.NIP_NBM; document.getElementById('guru-nama').value = guru.NamaGuru; document.getElementById('guru-wa').value = guru.No_WA || ''; document.getElementById('guru-jk').value = guru.Jenis_Kelamin || 'Laki-laki'; document.getElementById('guru-mapel').value = guru.MataPelajaran; document.getElementById('guru-jurusan').value = guru.ProgramKeahlian; document.getElementById('guru-status').value = guru.StatusAktif; document.getElementById('modal-title-guru').innerText = 'Edit Data Guru'; document.getElementById('modal-guru').style.display = 'flex';
+    document.getElementById('guru-id').value = guru.GuruID;
+    document.getElementById('guru-nbm-lama').value = guru.NIP_NBM;
+    document.getElementById('guru-nbm').value = guru.NIP_NBM;
+    document.getElementById('guru-nama').value = guru.NamaGuru;
+    document.getElementById('guru-wa').value = guru.No_WA || '';
+    document.getElementById('guru-jk').value = guru.Jenis_Kelamin || 'Laki-laki';
+    document.getElementById('guru-mapel').value = guru.MataPelajaran;
+    document.getElementById('guru-status').value = guru.StatusAktif;
+
+    // ==== Set dropdown Program Keahlian ====
+    const jurusan = guru.ProgramKeahlian || '';
+    const selectEl = document.getElementById('guru-jurusan');
+    const manualEl = document.getElementById('guru-jurusan-manual');
+    const daftarOpsi = ['Teknik Pemesinan', 'Teknik Pengelasan', 'Teknik Kendaraan Ringan', 'Teknik Sepeda Motor'];
+
+    if (jurusan === '' || daftarOpsi.indexOf(jurusan) !== -1) {
+      // Kosong atau ada di daftar → pakai dropdown langsung
+      selectEl.value = jurusan;
+      manualEl.value = '';
+      manualEl.style.display = 'none';
+    } else {
+      // Ada nilainya tapi bukan salah satu dari 4 opsi → pilih "Lainnya"
+      selectEl.value = '__LAINNYA__';
+      manualEl.value = jurusan;
+      manualEl.style.display = 'block';
+    }
+
+    document.getElementById('modal-title-guru').innerText = 'Edit Data Guru';
+    document.getElementById('modal-guru').style.display = 'flex';
   }
-  function submitGuru(e) {
-    e.preventDefault(); const btn = document.getElementById('btn-save-guru'); btn.disabled = true; btn.innerText = 'Menyimpan...';
-    const formData = { GuruID: document.getElementById('guru-id').value, NBM_Lama: document.getElementById('guru-nbm-lama').value, NBM: document.getElementById('guru-nbm').value, NoWA: document.getElementById('guru-wa').value, Nama: document.getElementById('guru-nama').value, JK: document.getElementById('guru-jk').value, Mapel: document.getElementById('guru-mapel').value, Jurusan: document.getElementById('guru-jurusan').value, Status: document.getElementById('guru-status').value };
-    google.script.run.withSuccessHandler(resStr => { const res = JSON.parse(resStr); btn.disabled = false; btn.innerText = 'Simpan Data Guru'; if(res.status === 'success') { showToast(res.message, 'success'); closeModalGuru(); loadGuruData(); } else { showToast(res.message, 'error'); } }).saveGuruData(formData);
+    function submitGuru(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save-guru');
+    btn.disabled = true;
+    btn.innerText = 'Menyimpan...';
+
+    // ==== Ambil nilai Program Keahlian ====
+    let jurusan = document.getElementById('guru-jurusan').value;
+    if (jurusan === '__LAINNYA__') {
+      jurusan = document.getElementById('guru-jurusan-manual').value.trim();
+      if (!jurusan) {
+        btn.disabled = false;
+        btn.innerText = 'Simpan Data Guru';
+        return showToast('Isi Program Keahlian terlebih dahulu.', 'error');
+      }
+    }
+
+    const formData = {
+      GuruID: document.getElementById('guru-id').value,
+      NBM_Lama: document.getElementById('guru-nbm-lama').value,
+      NBM: document.getElementById('guru-nbm').value,
+      NoWA: document.getElementById('guru-wa').value,
+      Nama: document.getElementById('guru-nama').value,
+      JK: document.getElementById('guru-jk').value,
+      Mapel: document.getElementById('guru-mapel').value,
+      Jurusan: jurusan,
+      Status: document.getElementById('guru-status').value
+    };
+    google.script.run.withSuccessHandler(resStr => {
+      const res = JSON.parse(resStr);
+      btn.disabled = false;
+      btn.innerText = 'Simpan Data Guru';
+      if (res.status === 'success') {
+        showToast(res.message, 'success');
+        closeModalGuru();
+        loadGuruData();
+      } else {
+        showToast(res.message, 'error');
+      }
+    }).saveGuruData(formData);
   }
 
   // ==========================================
