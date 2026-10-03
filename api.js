@@ -23,8 +23,7 @@
 // =============================================================
 // ⚠️ GANTI URL DI BAWAH dengan URL Web App Apps Script Anda
 // =============================================================
-const API_URL = 'const API_URL = 'https://script.google.com/macros/s/AKfycbzkVsmVwLGKBMMYlEN7KBf38cPsYxcIDV1PG5BgZPWnGgiigEkR4kUa5UOoMNYaiaN7/exec';';
-
+const API_URL = 'https://script.google.com/macros/s/AKfycbzkVsmVwLGKBMMYlEN7KBf38cPsYxcIDV1PG5BgZPWnGgiigEkR4kUa5UOoMNYaiaN7/exec';
 // =============================================================
 // DAFTAR ACTION yang pakai method POST
 // (sisanya otomatis dianggap GET)
