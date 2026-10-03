@@ -33,6 +33,15 @@
   function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.innerText = message; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
   }
+  // Safe setter — mencegah crash kalau elemen tidak ada
+  function safeSetValue(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+  function safeSetDisplay(id, display) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = display;
+  }
 
   // ==========================================
   // 3. FUNGSI NAVIGASI
@@ -85,71 +94,47 @@
     });
   }
   function filterGuruTable() { const kw = document.getElementById('search-guru').value.toLowerCase(); renderGuruTable(APP_STATE.gurus.filter(g => (g.NamaGuru && g.NamaGuru.toLowerCase().includes(kw)) || (g.NIP_NBM && g.NIP_NBM.toString().toLowerCase().includes(kw)))); }
-      function openModalGuru() {
+  function openModalGuru() {
     document.getElementById('formGuru').reset();
-    document.getElementById('guru-id').value = '';
-    document.getElementById('guru-nbm-lama').value = '';
+    safeSetValue('guru-id', '');
+    safeSetValue('guru-nbm-lama', '');
     document.getElementById('modal-title-guru').innerText = 'Tambah Data Guru Baru';
     document.getElementById('modal-guru').style.display = 'flex';
   }
-
-  // ==== Handler saat dropdown Program Keahlian berubah ====
-  function handleJurusanChange() {
-    const val = document.getElementById('guru-jurusan').value;
-    const manualEl = document.getElementById('guru-jurusan-manual');
-    if (val === '__LAINNYA__') {
-      manualEl.style.display = 'block';
-      manualEl.focus();
-    } else {
-      manualEl.style.display = 'none';
-      manualEl.value = '';
-    }
-  }
   function closeModalGuru() { document.getElementById('modal-guru').style.display = 'none'; }
+
   function editGuru(guruID) {
     const guru = APP_STATE.gurus.find(g => g.GuruID === guruID); if(!guru) return;
-    document.getElementById('guru-id').value = guru.GuruID;
-    document.getElementById('guru-nbm-lama').value = guru.NIP_NBM;
-    document.getElementById('guru-nbm').value = guru.NIP_NBM;
-    document.getElementById('guru-nama').value = guru.NamaGuru;
-    document.getElementById('guru-wa').value = guru.No_WA || '';
-    document.getElementById('guru-jk').value = guru.Jenis_Kelamin || 'Laki-laki';
-    document.getElementById('guru-mapel').value = guru.MataPelajaran;
-    document.getElementById('guru-status').value = guru.StatusAktif;
+    safeSetValue('guru-id', guru.GuruID);
+    safeSetValue('guru-nbm-lama', guru.NIP_NBM);
+    safeSetValue('guru-nbm', guru.NIP_NBM);
+    safeSetValue('guru-nama', guru.NamaGuru);
+    safeSetValue('guru-wa', guru.No_WA || '');
+    safeSetValue('guru-jk', guru.Jenis_Kelamin || 'Laki-laki');
+    safeSetValue('guru-mapel', guru.MataPelajaran);
+    safeSetValue('guru-status', guru.StatusAktif);
 
     // ==== Set dropdown Program Keahlian ====
     const jurusan = guru.ProgramKeahlian || '';
     const selectEl = document.getElementById('guru-jurusan');
-    const daftarOpsi = ['Teknik Pemesinan', 'Teknik Pengelasan', 'Teknik Kendaraan Ringan', 'Teknik Sepeda Motor', 'Semua KK'];
-
-    if (daftarOpsi.indexOf(jurusan) !== -1) {
-      // Nilai ada di daftar → pilih langsung
-      selectEl.value = jurusan;
-    } else {
-      // Nilai tidak ada di daftar (data lama) → kosongkan
-      selectEl.value = '';
+    if (selectEl) {
+      const daftarOpsi = ['Teknik Pemesinan', 'Teknik Pengelasan', 'Teknik Kendaraan Ringan', 'Teknik Sepeda Motor', 'Semua KK'];
+      if (daftarOpsi.indexOf(jurusan) !== -1) {
+        selectEl.value = jurusan;
+      } else {
+        selectEl.value = '';
+      }
     }
 
     document.getElementById('modal-title-guru').innerText = 'Edit Data Guru';
     document.getElementById('modal-guru').style.display = 'flex';
   }
-    function submitGuru(e) {
+
+  function submitGuru(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-save-guru');
     btn.disabled = true;
     btn.innerText = 'Menyimpan...';
-
-    // ==== Ambil nilai Program Keahlian ====
-    let jurusan = document.getElementById('guru-jurusan').value;
-    if (jurusan === '__LAINNYA__') {
-      jurusan = document.getElementById('guru-jurusan-manual').value.trim();
-      if (!jurusan) {
-        btn.disabled = false;
-        btn.innerText = 'Simpan Data Guru';
-        return showToast('Isi Program Keahlian terlebih dahulu.', 'error');
-      }
-    }
-
     const formData = {
       GuruID: document.getElementById('guru-id').value,
       NBM_Lama: document.getElementById('guru-nbm-lama').value,
@@ -158,7 +143,7 @@
       Nama: document.getElementById('guru-nama').value,
       JK: document.getElementById('guru-jk').value,
       Mapel: document.getElementById('guru-mapel').value,
-      Jurusan: jurusan,
+      Jurusan: document.getElementById('guru-jurusan').value,
       Status: document.getElementById('guru-status').value
     };
     google.script.run.withSuccessHandler(resStr => {
@@ -405,7 +390,7 @@
   }
 
   // ==========================================
-  // 9. TAHAP 15: CRUD MANAJEMEN INSTRUMEN
+  // 9. CRUD MANAJEMEN INSTRUMEN
   // ==========================================
   function loadInstrumenAdmin() {
     const tbody = document.getElementById('tbody-instrumen'); if(!tbody) return;
@@ -483,7 +468,7 @@
 
   function initApp() { document.getElementById('login-layout').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; document.getElementById('welcome-user').innerText = APP_STATE.user.Nama + ' (' + APP_STATE.user.Role + ')'; renderSidebar(); navigateTo('dashboard', 'Dashboard'); }
 
-  // ===== PERUBAHAN: tunggu includes-loaded, bukan window.onload =====
+  // ===== Tunggu includes-loaded, bukan window.onload =====
   window.addEventListener('includes-loaded', function() {
     document.getElementById('app-layout').style.display = 'none';
     const su = sessionStorage.getItem('simpro_user');
