@@ -1,0 +1,73 @@
+<div id="page-observasi" class="page-section" style="display:none;">
+  
+  <div id="obs-list-view" class="card" style="background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); border: 1px solid #eef0f4;">
+    <h3 style="margin: 0 0 20px 0; color: var(--primary-navy); font-size: 20px;"><i class="fas fa-clipboard-check"></i> Pelaksanaan Observasi</h3>
+    <p style="color: var(--text-muted); margin-top:-10px; margin-bottom: 20px;">Pilih jadwal supervisi di bawah ini untuk memulai atau melanjutkan pengisian instrumen.</p>
+    
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="table-siap-observasi">
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Guru & Mapel</th>
+            <th>Kelas / Ruang</th>
+            <th>Supervisor</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-siap-observasi"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="obs-form-view" style="display:none;">
+    <div style="background: var(--primary-navy); background-image: var(--blue-gradient); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h3 style="margin:0 0 5px 0; color: var(--accent-gold);">Lembar Supervisi Pembelajaran</h3>
+        <p style="margin:0; font-size: 14px;" id="obs-header-guru">Nama Guru - Mata Pelajaran (Kelas)</p>
+      </div>
+      <button class="btn btn-primary" style="width:auto; border-color:white; background:transparent;" onclick="batalObservasi()"><i class="fas fa-times"></i> Batal / Kembali</button>
+    </div>
+
+    <form id="formObservasi">
+      <div id="instrumen-container" style="margin-bottom: 30px;">
+        <div style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Memuat instrumen...</div>
+      </div>
+      
+      <div class="card" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #eef0f4; margin-bottom: 20px;">
+        <h4 style="color: var(--primary-navy); margin-top:0;"><i class="fas fa-comment-dots"></i> Catatan Pasca Observasi</h4>
+        <div class="form-group">
+          <label class="form-label">Kekuatan / Kelebihan Guru</label>
+          <textarea id="obs-kekuatan" class="form-control" rows="3" placeholder="Tuliskan kekuatan guru yang terlihat..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Area yang Perlu Dikembangkan</label>
+          <textarea id="obs-pengembangan" class="form-control" rows="3" placeholder="Tuliskan area pengembangan untuk tindak lanjut..."></textarea>
+        </div>
+      </div>
+
+      <!-- TAHAP 13: BUKTI DOKUMENTASI -->
+      <div class="card" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #eef0f4; margin-bottom: 20px;">
+        <h4 style="color: var(--primary-navy); margin-top:0;"><i class="fas fa-camera"></i> Bukti Dokumentasi</h4>
+        <div class="form-group">
+          <label class="form-label">Unggah Foto Kegiatan / File RPP (Opsional, Maks 3MB)</label>
+          <input type="file" id="obs-file" class="form-control" accept="image/*,.pdf">
+          <small style="color: var(--text-muted); display: block; margin-top: 5px;">File akan otomatis diunggah ke folder Google Drive. Biarkan kosong jika tidak ada perubahan/penambahan bukti.</small>
+          
+          <a id="obs-link-dok" href="#" target="_blank" style="display:none; margin-top:10px; font-size:13px; color:var(--primary-blue); font-weight:bold;">
+            <i class="fas fa-external-link-alt"></i> Lihat Dokumen Tersimpan Saat Ini
+          </a>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 15px; justify-content: flex-end;">
+        <button type="button" id="btn-draft-obs" class="btn btn-info" style="width:auto; background:#17a2b8;" onclick="submitObservasi('Draft')">
+          <i class="fas fa-save"></i> Simpan Draft
+        </button>
+        <button type="button" id="btn-submit-obs" class="btn btn-primary" style="width:auto;" onclick="submitObservasi('Selesai')">
+          <i class="fas fa-check-double"></i> Selesaikan Penilaian
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

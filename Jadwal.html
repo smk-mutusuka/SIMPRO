@@ -1,0 +1,97 @@
+<div id="page-jadwal" class="page-section" style="display:none;">
+  <div class="card" style="background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); border: 1px solid #eef0f4;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+      <h3 style="margin: 0; color: var(--primary-navy); font-size: 20px;"><i class="fas fa-calendar-alt"></i> Jadwal Supervisi</h3>
+      <div style="display: flex; gap: 10px;">
+        <div class="search-box">
+          <i class="fas fa-search" style="position: absolute; margin-left: 12px; margin-top: 12px; color: var(--text-muted);"></i>
+          <input type="text" id="search-jadwal" placeholder="Cari Guru / Kelas..." class="form-control" style="padding-left: 35px; width: 220px;" onkeyup="filterJadwalTable()">
+        </div>
+        <!-- Tombol ini akan disembunyikan via JS jika yang login adalah Guru -->
+        <button class="btn btn-primary" style="width: auto;" onclick="openJadwalModal()" id="btn-add-jadwal"><i class="fas fa-plus"></i> Buat Jadwal</button>
+      </div>
+    </div>
+    
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="table-jadwal">
+        <thead>
+          <tr>
+            <th>Tanggal & Waktu</th>
+            <th>Nama Guru</th>
+            <th>Mata Pelajaran</th>
+            <th>Kelas</th>
+            <th>Supervisor</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-jadwal"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="modal-jadwal" class="modal-overlay" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="margin:0; color: var(--primary-navy);">Buat Jadwal Baru</h3>
+      <button class="close-btn" onclick="closeJadwalModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="formJadwal" onsubmit="submitJadwal(event)">
+        
+        <div class="form-group">
+          <label class="form-label">Jenis Supervisi</label>
+          <select id="jdw-jenis" class="form-control" required>
+            <option value="Administrasi">Supervisi Administrasi (Telaah Perencanaan)</option>
+            <option value="Pelaksanaan">Supervisi Pelaksanaan Pembelajaran (Observasi)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Guru yang Dinilai (Objek)</label>
+          <select id="jdw-guru" class="form-control" required onchange="fillGuruDetails()">
+            <option value="">-- Pilih Guru --</option>
+          </select>
+          <input type="hidden" id="jdw-nama-guru">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Mata Pelajaran</label>
+          <input type="text" id="jdw-mapel" class="form-control" required>
+        </div>
+        
+        <div style="display:flex; gap: 15px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Kelas</label>
+            <input type="text" id="jdw-kelas" class="form-control" placeholder="Cth: X TKR 1" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Ruang</label>
+            <input type="text" id="jdw-ruang" class="form-control" placeholder="Cth: Bengkel/R.12" required>
+          </div>
+        </div>
+        
+        <div style="display:flex; gap: 15px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Tanggal</label>
+            <input type="date" id="jdw-tanggal" class="form-control" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Jam</label>
+            <input type="time" id="jdw-jam" class="form-control" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Supervisor Penilai (Guru / Admin)</label>
+          <!-- Admin yang mengetik manual nama supervisor-nya (bisa menunjuk sesama guru) -->
+          <input type="text" id="jdw-supervisor" class="form-control" placeholder="Masukkan nama penilai..." required>
+        </div>
+        
+        <button type="submit" id="btn-save-jadwal" class="btn btn-primary" style="margin-top: 10px;">Simpan Jadwal</button>
+      </form>
+    </div>
+  </div>
+</div>

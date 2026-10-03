@@ -1,0 +1,92 @@
+<div id="page-laporan" class="page-section" style="display:none;">
+  <div class="card" style="background: var(--white); padding: 25px; border-radius: 12px; border: 1px solid #eef0f4;">
+
+    <!-- KOP SURAT LAPORAN GLOBAL -->
+    <div class="print-header" style="display:none; text-align:center; margin-bottom:30px;">
+      <img src="https://drive.google.com/thumbnail?id=1BokjTNpAmp9l6QpM0ULASQp2TpvMEUjb&sz=w400" alt="Logo Sekolah" style="max-width:110px; margin-bottom:15px;">
+      <h2 style="margin:0; font-size:22px; font-weight:bold; font-family: Arial, sans-serif;">SMK MUHAMMADIYAH 1 SURAKARTA</h2>
+      <h3 id="judul-print-laporan" style="margin:5px 0 0 0; font-size:16px; font-weight:bold; font-family: Arial, sans-serif; text-transform: uppercase;">LAPORAN SUPERVISI ADMINISTRASI PEMBELAJARAN</h3>
+    </div>
+
+    <!-- Header Tampilan Web (Ditambah Tombol Export) -->
+    <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+      <h3 style="margin: 0; color: var(--primary-navy); font-size: 20px;"><i class="fas fa-chart-pie"></i> Laporan Supervisi</h3>
+      
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-success" style="width: auto; background: #28a745; border: none;" onclick="exportToExcel()">
+          <i class="fas fa-file-excel"></i> Export Excel
+        </button>
+        <button class="btn btn-primary" style="width: auto;" onclick="cetakLaporan()">
+          <i class="fas fa-print"></i> Cetak Rekapitulasi
+        </button>
+      </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="no-print" style="display: flex; gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eef0f4; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 250px;">
+        <label style="font-size: 12px; color: var(--text-muted); font-weight: bold;">PILIH JENIS LAPORAN:</label>
+        <select id="filter-jenis-laporan" class="form-control" onchange="filterLaporanTable()">
+          <option value="Administrasi">SUPERVISI ADMINISTRASI PEMBELAJARAN</option>
+          <option value="Pelaksanaan">OBSERVASI PELAKSANAAN PEMBELAJARAN</option>
+        </select>
+      </div>
+      <div style="flex: 1; min-width: 200px;">
+        <label style="font-size: 12px; color: var(--text-muted); font-weight: bold;">PILIH GURU (OPSIONAL):</label>
+        <input type="text" id="search-laporan" placeholder="Ketik nama guru..." class="form-control" onkeyup="filterLaporanTable()">
+      </div>
+    </div>
+
+    <!-- WIDGET DASHBOARD -->
+    <div class="dashboard-grid no-print" id="laporan-summary" style="margin-bottom: 30px;"></div>
+
+    <div style="overflow-x: auto;">
+      <table class="data-table print-table" id="table-laporan">
+        <thead>
+          <tr>
+            <th style="text-align: center;">TANGGAL</th>
+            <th style="text-align: center;">NAMA GURU</th>
+            <th style="text-align: center;">MATA PELAJARAN</th>
+            <th style="text-align: center;">NILAI</th>
+            <th style="text-align: center;">PREDIKAT</th>
+            <th style="text-align: center;">STATUS TL</th>
+            <th class="no-print" style="text-align: center;">AKSI CETAK</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-laporan"></tbody>
+      </table>
+    </div>
+
+    <!-- FOOTER LAPORAN GLOBAL CETAK (Kepsek & WKS Kurikulum) -->
+    <div class="print-footer" style="display:none; margin-top: 40px; width: 100%; color: black; font-family: Arial, sans-serif;">
+      <table style="width: 100%; text-align: center; border: none; font-size: 14px; page-break-inside: avoid;">
+        <tr>
+          <td style="width: 50%; border: none; vertical-align: top;">
+            <br>
+            Mengetahui.<br>
+            Kepala Sekolah
+          </td>
+          <td style="width: 50%; border: none; vertical-align: top;">
+            <span id="print-tanggal-cetak">Surakarta, ..........................</span><br><br>
+            WKS Kurikulum
+          </td>
+        </tr>
+        <tr>
+          <td style="height: 80px; border: none;"></td>
+          <td style="height: 80px; border: none;"></td>
+        </tr>
+        <tr>
+          <td style="border: none;">
+            <strong>Joko Harinto, M.Pd.</strong><br>
+            NIPM. 512 099 314
+          </td>
+          <td style="border: none;">
+            <strong>Nurul Khommariah, S.Pd.</strong><br>
+            NBM. 1132707
+          </td>
+        </tr>
+      </table>
+    </div>
+
+  </div>
+</div>

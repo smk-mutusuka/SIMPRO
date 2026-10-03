@@ -1,0 +1,98 @@
+<div id="page-guru" class="page-section" style="display:none;">
+  <div class="card" style="background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); border: 1px solid #eef0f4;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+      <h3 style="margin: 0; color: var(--primary-navy); font-size: 20px;"><i class="fas fa-chalkboard-teacher"></i> Data Guru & Pegawai</h3>
+      
+      <div style="display: flex; gap: 10px;">
+        <div class="search-box">
+          <i class="fas fa-search" style="position: absolute; margin-left: 12px; margin-top: 12px; color: var(--text-muted);"></i>
+          <input type="text" id="search-guru" placeholder="Cari Nama / NBM..." class="form-control" style="padding-left: 35px; width: 220px;" onkeyup="filterGuruTable()">
+        </div>
+        <button class="btn btn-primary" style="width: auto; display: none;" id="btn-add-guru" onclick="openModalGuru()"><i class="fas fa-plus"></i> Tambah Guru</button>
+      </div>
+    </div>
+    
+    <div style="overflow-x: auto;">
+      <table class="data-table" id="table-guru">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>NBM / NIP</th>
+            <th>Nama Guru</th>
+            <th>No. WhatsApp</th>
+            <th>Mata Pelajaran</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-guru">
+          <tr><td colspan="7" style="text-align:center; padding: 20px;">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL TAMBAH/EDIT GURU -->
+<div id="modal-guru" class="modal-overlay" style="display:none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 style="margin:0; color: var(--primary-navy);" id="modal-title-guru">Tambah Data Guru</h3>
+      <button class="close-btn" onclick="closeModalGuru()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="formGuru" onsubmit="submitGuru(event)">
+        <input type="hidden" id="guru-id">
+        <input type="hidden" id="guru-nbm-lama">
+        
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap (Beserta Gelar)</label>
+          <input type="text" id="guru-nama" class="form-control" placeholder="Cth: Sihwadi, S.Pd, M.Pd" required>
+        </div>
+        
+        <div style="display:flex; gap: 15px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">NIP / NBM</label>
+            <input type="text" id="guru-nbm" class="form-control" placeholder="Cth: 1172972" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Jenis Kelamin</label>
+            <select id="guru-jk" class="form-control" required>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex; gap: 15px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">No. WhatsApp</label>
+            <input type="text" id="guru-wa" class="form-control" placeholder="Cth: 08123456789">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Mata Pelajaran</label>
+            <input type="text" id="guru-mapel" class="form-control" placeholder="Cth: Kerja Bangku" required>
+          </div>
+        </div>
+        
+        <div style="display:flex; gap: 15px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Program Keahlian</label>
+            <input type="text" id="guru-jurusan" class="form-control" placeholder="Cth: Teknik Mesin">
+          </div>
+          <div class="form-group" style="flex:1;">
+             <label class="form-label">Status Akun</label>
+             <select id="guru-status" class="form-control" required>
+               <option value="Aktif">Aktif</option>
+               <option value="Nonaktif">Nonaktif</option>
+             </select>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-save-guru" class="btn btn-primary" style="margin-top: 10px;">Simpan Data Guru</button>
+      </form>
+    </div>
+  </div>
+</div>

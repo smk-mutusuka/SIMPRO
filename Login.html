@@ -1,0 +1,41 @@
+<div id="login-layout" class="login-body">
+  <div class="login-card" style="max-width: 400px; padding: 40px 30px;">
+    
+    <img src="https://drive.google.com/thumbnail?id=1vBEF6Ey6Rp_MX35BSzZeEx4gYGnioQod&sz=w400" alt="Logo SIMPRO" class="login-logo" style="max-width: 160px;">
+    
+    <!-- Tombol Pilihan Role (Tab) -->
+    <div class="login-tabs">
+      <button class="tab-btn active" id="tab-admin" type="button" onclick="switchLoginTab('admin')">Manajemen</button>
+      <button class="tab-btn" id="tab-guru" type="button" onclick="switchLoginTab('guru')">Guru</button>
+    </div>
+
+    <!-- FORM LOGIN ADMIN -->
+    <form id="loginFormAdmin" onsubmit="event.preventDefault(); handleLogin('admin');">
+      <p style="color: var(--text-muted); font-size: 13px; margin-top: 0; margin-bottom: 20px;">Login Admin / Kepala Sekolah / Waka</p>
+      <div class="form-group">
+        <label class="form-label" style="font-size: 13px;">Username</label>
+        <input type="text" id="username-admin" class="form-control" placeholder="Masukkan Username..." required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size: 13px;">Password</label>
+        <input type="password" id="password-admin" class="form-control" placeholder="Masukkan Password..." required>
+      </div>
+      <button type="submit" id="btn-login-admin" class="btn btn-primary">Masuk</button>
+    </form>
+
+    <!-- FORM LOGIN GURU -->
+    <form id="loginFormGuru" onsubmit="event.preventDefault(); handleLogin('guru');" style="display:none;">
+      <p style="color: var(--text-muted); font-size: 13px; margin-top: 0; margin-bottom: 20px;">Login Guru / Supervisor</p>
+      <div class="form-group">
+        <label class="form-label" style="font-size: 13px;">NIP / NBM</label>
+        <input type="text" id="username-guru" class="form-control" placeholder="Masukkan NBM..." required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size: 13px;">Password</label>
+        <input type="password" id="password-guru" class="form-control" placeholder="Masukkan Password..." required>
+      </div>
+      <button type="submit" id="btn-login-guru" class="btn" style="background: var(--primary-blue); color: white;">Masuk</button>
+    </form>
+
+  </div>
+</div>

@@ -1,0 +1,56 @@
+<div id="page-dashboard" class="page-section" style="display:none;">
+  
+  <!-- SUMMARY WIDGET DI ATAS -->
+  <div class="dashboard-grid" id="laporan-summary-dashboard" style="margin-bottom: 25px;">
+     <!-- Akan diisi otomatis oleh JS -->
+  </div>
+
+  <!-- BANNER BIRU DI TENGAH -->
+  <div class="card" style="background: linear-gradient(135deg, #1756a9 0%, #0d366a 100%); color: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(23,86,169,0.2); margin-bottom: 25px;">
+    <h2 style="margin-top: 0; font-size: 24px;">Selamat Datang di SIMPRO</h2>
+    <p style="margin-bottom: 0; opacity: 0.9; font-size: 15px; line-height: 1.5;">Sistem Professional Teacher Supervision dirancang untuk mempermudah perencanaan, pelaksanaan observasi, evaluasi, hingga monitoring tindak lanjut secara terstruktur.</p>
+  </div>
+  
+  <!-- AREA GRAFIK PIE & DATA GURU DI BAWAH -->
+  <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+     <!-- PIE CHART (PREDIKAT) -->
+     <div class="card" style="flex: 1; min-width: 300px; padding: 20px; border-radius: 12px; border: 1px solid #eef0f4;">
+        <h4 style="text-align: center; color: var(--primary-navy); margin-top:0; margin-bottom: 20px;">Persentase Hasil Supervisi</h4>
+        <div style="height: 250px; position: relative;">
+            <canvas id="pieChart"></canvas>
+        </div>
+     </div>
+
+     <!-- DATA GURU (DESAIN 2 KOLOM KATEGORI) -->
+     <div class="card" style="flex: 2; min-width: 450px; padding: 25px; border-radius: 12px; border: 1px solid #eef0f4; background: white;">
+        <div style="display: flex; gap: 25px; flex-wrap: wrap; height: 100%;">
+            
+            <!-- KOLOM 1: ADMINISTRASI -->
+            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column;">
+                <div style="background: #345c92; color: white; text-align: center; font-weight: bold; font-size: 16px; padding: 12px; border-radius: 6px 6px 0 0;">
+                    Supervisi Administrasi
+                </div>
+                <div style="border: 1px solid #eef0f4; border-top: none; padding: 15px 25px; border-radius: 0 0 6px 6px; flex-grow: 1; background: #fafbfc;">
+                    <ul id="list-administrasi" style="margin: 0; padding-left: 20px; font-size: 15px; color: #333; line-height: 1.8;">
+                        <li style="color:#999; list-style:none; margin-left:-20px; text-align:center;">Memuat data...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- KOLOM 2: PEMBELAJARAN (PELAKSANAAN) -->
+            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column;">
+                <div style="background: #9abce3; color: #1756a9; text-align: center; font-weight: bold; font-size: 16px; padding: 12px; border-radius: 6px 6px 0 0;">
+                    Observasi Pembelajaran
+                </div>
+                <div style="border: 1px solid #eef0f4; border-top: none; padding: 15px 25px; border-radius: 0 0 6px 6px; flex-grow: 1; background: #fafbfc;">
+                    <ul id="list-pelaksanaan" style="margin: 0; padding-left: 20px; font-size: 15px; color: #333; line-height: 1.8;">
+                        <li style="color:#999; list-style:none; margin-left:-20px; text-align:center;">Memuat data...</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+     </div>
+  </div>
+  
+</div>
