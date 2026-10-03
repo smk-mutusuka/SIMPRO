@@ -85,7 +85,28 @@
     });
   }
   function filterGuruTable() { const kw = document.getElementById('search-guru').value.toLowerCase(); renderGuruTable(APP_STATE.gurus.filter(g => (g.NamaGuru && g.NamaGuru.toLowerCase().includes(kw)) || (g.NIP_NBM && g.NIP_NBM.toString().toLowerCase().includes(kw)))); }
-  function openModalGuru() { document.getElementById('formGuru').reset(); document.getElementById('guru-id').value = ''; document.getElementById('guru-nbm-lama').value = ''; document.getElementById('modal-title-guru').innerText = 'Tambah Data Guru Baru'; document.getElementById('modal-guru').style.display = 'flex'; }
+    function openModalGuru() {
+    document.getElementById('formGuru').reset();
+    document.getElementById('guru-id').value = '';
+    document.getElementById('guru-nbm-lama').value = '';
+    document.getElementById('guru-jurusan-manual').value = '';
+    document.getElementById('guru-jurusan-manual').style.display = 'none';
+    document.getElementById('modal-title-guru').innerText = 'Tambah Data Guru Baru';
+    document.getElementById('modal-guru').style.display = 'flex';
+  }
+
+  // ==== Handler saat dropdown Program Keahlian berubah ====
+  function handleJurusanChange() {
+    const val = document.getElementById('guru-jurusan').value;
+    const manualEl = document.getElementById('guru-jurusan-manual');
+    if (val === '__LAINNYA__') {
+      manualEl.style.display = 'block';
+      manualEl.focus();
+    } else {
+      manualEl.style.display = 'none';
+      manualEl.value = '';
+    }
+  }
   function closeModalGuru() { document.getElementById('modal-guru').style.display = 'none'; }
     function editGuru(guruID) {
     const guru = APP_STATE.gurus.find(g => g.GuruID === guruID); if(!guru) return;
