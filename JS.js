@@ -974,6 +974,23 @@
       })
       .catch(err => showToast('Error: ' + err.message, 'error'));
   }
+  // ===== KIRIM WA REMINDER KE SUPERVISOR (TAHAP C) =====
+  function kirimWAReminderKeSupervisor(jadwalID) {
+    if (!jadwalID) return showToast('ID jadwal tidak valid.', 'error');
+    showToast('Menyiapkan pesan WA...', 'info');
+    
+    apiCall('kirimWAReminder', jadwalID)
+      .then(res => {
+        if (!res || res.status !== 'success') {
+          showToast(res && res.message ? res.message : 'Gagal menyiapkan WA', 'error');
+          return;
+        }
+        const { phone, pesan } = res.data;
+        window.open(`whatsapp://send?phone=${phone}&text=${encodeURIComponent(pesan)}`, '_self');
+        showToast('WA reminder dibuka!', 'success');
+      })
+      .catch(err => showToast('Error: ' + err.message, 'error'));
+  }
   window.addEventListener('includes-loaded', function() {
     document.getElementById('app-layout').style.display = 'none';
     const su = sessionStorage.getItem('simpro_user');
