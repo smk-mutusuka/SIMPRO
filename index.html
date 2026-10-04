@@ -88,8 +88,37 @@
       </div>
     </div>
 
-    <script src="api.js?v=5"></script>
-    <script src="google-polyfill.js?v=5"></script>
-    <script src="app.js?v=3"></script>
+    <!-- ========================================== -->
+    <!-- AUTO LOADER — tidak perlu update versi lagi -->
+    <!-- ========================================== -->
+    <script>
+      (function () {
+        // Timestamp otomatis → cache selalu fresh
+        var v = Date.now();
+        var files = ['api.js', 'google-polyfill.js', 'app.js'];
+
+        // Load berurutan (sequential) supaya urutan dependency benar
+        function loadNext(index) {
+          if (index >= files.length) {
+            // Semua script sudah dimuat → kalau includes-loaded sudah fired duluan, trigger manual
+            if (window.__includesLoaded) {
+              window.dispatchEvent(new Event('includes-loaded'));
+            }
+            return;
+          }
+
+          var s = document.createElement('script');
+          s.src = files[index] + '?v=' + v;
+          s.onload = function () { loadNext(index + 1); };
+          s.onerror = function () {
+            console.error('[loader] Gagal load: ' + files[index]);
+            loadNext(index + 1);
+          };
+          document.body.appendChild(s);
+        }
+
+        loadNext(0);
+      })();
+    </script>
   </body>
 </html>
