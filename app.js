@@ -815,7 +815,20 @@
       document.getElementById('tl-temuan').value = obs.DataTL.Temuan||'';
       document.getElementById('tl-rekomendasi').value = obs.DataTL.Rekomendasi||'';
       document.getElementById('tl-rencana').value = obs.DataTL.RencanaTindakLanjut||'';
-      document.getElementById('tl-target').value = obs.DataTL.TargetTanggal||'';
+    // Normalize TargetTanggal ke format YYYY-MM-DD (yang dibutuhkan input date)
+      let tglTarget = obs.DataTL.TargetTanggal || '';
+      if (tglTarget) {
+        try {
+          const d = new Date(tglTarget);
+          if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            tglTarget = yyyy + '-' + mm + '-' + dd;
+          }
+        } catch(e) { /* biarkan apa adanya */ }
+      }
+      document.getElementById('tl-target').value = tglTarget;
       document.getElementById('tl-status').value = obs.DataTL.Status||'Belum Dimulai';
       document.getElementById('tl-catatan').value = obs.DataTL.CatatanSupervisor||'';
     } else {
