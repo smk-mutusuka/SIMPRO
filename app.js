@@ -665,7 +665,8 @@
     APP_STATE.activeJadwal = jadwal;
     document.getElementById('obs-list-view').style.display = 'none';
     document.getElementById('obs-form-view').style.display = 'block';
-    document.getElementById('obs-judul').innerText = jadwal.JenisSupervisi === 'Administrasi' ? 'Lembar Supervisi Administrasi' : 'Lembar Observasi Pembelajaran';
+    const judulEl = document.getElementById('obs-judul');
+    if (judulEl) judulEl.innerText = jadwal.JenisSupervisi === 'Administrasi' ? 'Lembar Supervisi Administrasi' : 'Lembar Observasi Pembelajaran';
     document.getElementById('obs-header-guru').innerText = `${jadwal.NamaGuru} - ${jadwal.JenisSupervisi}`;
     document.getElementById('formObservasi').reset();
     const linkDok = document.getElementById('obs-link-dok'); if(linkDok) linkDok.style.display = 'none';
