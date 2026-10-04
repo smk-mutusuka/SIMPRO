@@ -373,15 +373,15 @@
       })
       .catch(err => showToast('Error: ' + err.message, 'error'));
   }
-  function prosesKirimWA(jdw) {
+    function prosesKirimWA(jdw) {
     const guru = APP_STATE.gurus.find(g => g.GuruID === jdw.GuruID || g.NamaGuru === jdw.NamaGuru);
-    if(!guru || !guru.No_WA || guru.No_WA.toString().trim() === "") return showToast(`Nomor WA Bapak/Ibu ${jdw.NamaGuru} belum disetting!`, "error");
-    let phone = guru.No_WA.toString().replace(/[^0-9]/g, ''); if(phone.startsWith('0')) phone = '62' + phone.substring(1);
-    let teksJenis = jdw.JenisSupervisi === "Administrasi" ? "Supervisi Administrasi" : "Observasi Pelaksanaan";
-    let sapaan = "Bapak/Ibu"; if (guru.Jenis_Kelamin) { let jk = guru.Jenis_Kelamin.toString().toLowerCase().trim(); if (jk === "laki-laki" || jk === "laki" || jk === "l") sapaan = "Bapak"; else if (jk === "perempuan" || jk === "p") sapaan = "Ibu"; }
-    const pesan = `*PEMBERITAHUAN JADWAL SUPERVISI/OBSERVASI*\n\nAssalaamu'alaikum ${sapaan} *${jdw.NamaGuru}*, berikut kami informasikan Jadwal Supervisi Anda yang telah ditetapkan di sistem SIMPRO:\n\n📅 *Tanggal:* ${formatTanggalIndo(jdw.Tanggal)}\n⏰ *Jam:* ${formatWaktuIndo(jdw.Jam)}\n📚 *Mata Pelajaran:* ${jdw.MataPelajaran}\n🏫 *Kelas/Ruang:* ${jdw.Kelas} / ${jdw.Ruang}\n👤 *Supervisor:* ${jdw.Supervisor}\n📝 *Jenis:* ${teksJenis}\n\nMohon dipersiapkan perangkat serta proses pembelajarannya dengan baik, terima kasih.\n\n*Tim Kurikulum*`;
-    window.open(`whatsapp://send?phone=${phone}&text=${encodeURIComponent(pesan)}`, '_self');
-  }
+    if(!guru) return showToast('Data guru tidak ditemukan.', "error");
+    const noWA = guru.No_WA || guru.NoWA || guru.no_wa || guru.NoHp || guru.NoHP || guru.WhatsApp || '';
+    if(!noWA || noWA.toString().trim() === "") {
+      console.log('[WA] Data guru:', guru);
+      return showToast(`Nomor WA Bapak/Ibu ${jdw.NamaGuru} belum disetting!`, "error");
+    }
+    let phone = noWA.toString().replace(/[^0-9]/g, '');
 
   function konfirmasiHapusJadwal(id) { if(confirm("Yakin ingin menghapus Jadwal ini secara permanen?")) { showToast("Menghapus...", "info"); google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); if(res.status === 'success') { showToast(res.message, 'success'); loadJadwalData(); } else showToast(res.message, 'error'); }).hapusDataJadwal(id); } }
   function openJadwalModal() { document.getElementById('modal-jadwal').style.display = 'flex'; document.getElementById('jdw-supervisor').value = APP_STATE.user.Nama; if(APP_STATE.gurus.length === 0) { document.getElementById('jdw-guru').innerHTML = '<option>Memuat data guru...</option>'; google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); if(res.status === 'success') { APP_STATE.gurus = res.data; populateGuruSelect(); } }).getGuruList(); } else { populateGuruSelect(); } }
