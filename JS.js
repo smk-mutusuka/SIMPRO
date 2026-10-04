@@ -6,14 +6,19 @@
   };
 
   const MENU_CONFIG = [
-    { id: 'dashboard', icon: 'fas fa-home', title: 'Dashboard', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU', 'KEPSEK', 'WAKA'] },
-    { id: 'guru', icon: 'fas fa-chalkboard-teacher', title: 'Data Guru', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'] },
-    { id: 'jadwal', icon: 'fas fa-calendar-alt', title: 'Jadwal Supervisi', roles: ['ADMIN', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU', 'KEPSEK', 'WAKA'] },
-    { id: 'observasi', icon: 'fas fa-eye', title: 'Observasi & Instrumen', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU', 'KEPSEK', 'WAKA'] },
-    { id: 'tindak-lanjut', icon: 'fas fa-sync-alt', title: 'Tindak Lanjut', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU', 'KEPSEK', 'WAKA'] },
-    { id: 'laporan', icon: 'fas fa-chart-pie', title: 'Laporan', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'] },
-    { id: 'instrumen', icon: 'fas fa-list-ul', title: 'Manajemen Instrumen', roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'] }
+    { id: 'dashboard',     icon: 'fas fa-home',              title: 'Dashboard',              roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
+    { id: 'guru',          icon: 'fas fa-chalkboard-teacher', title: 'Data Guru',              roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] },
+    { id: 'jadwal',        icon: 'fas fa-calendar-alt',      title: 'Jadwal Supervisi',       roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
+    { id: 'observasi',     icon: 'fas fa-eye',               title: 'Observasi & Instrumen',  roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR'] },
+    { id: 'tindak-lanjut', icon: 'fas fa-sync-alt',          title: 'Tindak Lanjut',          roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
+    { id: 'laporan',       icon: 'fas fa-chart-pie',         title: 'Laporan',                roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] },
+    { id: 'instrumen',     icon: 'fas fa-list-ul',           title: 'Manajemen Instrumen',    roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] }
   ];
+
+  // Helper: role yang punya hak manajemen (admin-level)
+  function isManajemen() {
+    return APP_STATE.user && ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'].indexOf(APP_STATE.user.Role) !== -1;
+  }
 
   // Variabel Global untuk Chart
   let chartPieInstance = null;
@@ -33,15 +38,8 @@
   function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.innerText = message; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
   }
-  // Safe setter — mencegah crash kalau elemen tidak ada
-  function safeSetValue(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-  }
-  function safeSetDisplay(id, display) {
-    const el = document.getElementById(id);
-    if (el) el.style.display = display;
-  }
+  function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+  function safeSetDisplay(id, display) { const el = document.getElementById(id); if (el) el.style.display = display; }
 
   // ==========================================
   // 3. FUNGSI NAVIGASI
@@ -72,7 +70,11 @@
         menuContainer.appendChild(li);
       }
     });
-    if(APP_STATE.user.Role === 'GURU') { const btnAdd = document.getElementById('btn-add-jadwal'); if(btnAdd) btnAdd.style.display = 'none'; }
+    // Sembunyikan tombol "Buat Jadwal" untuk GURU (nanti diganti tombol "Ajukan Jadwal" di TAHAP B)
+    if(APP_STATE.user.Role === 'GURU' || APP_STATE.user.Role === 'SUPERVISOR') {
+      const btnAdd = document.getElementById('btn-add-jadwal');
+      if(btnAdd) btnAdd.style.display = 'none';
+    }
   }
   function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
@@ -88,7 +90,7 @@
     if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data guru.</td></tr>'; return; }
     data.forEach((guru, index) => {
       const bClass = guru.StatusAktif === 'Aktif' ? 'badge-aktif' : 'badge-nonaktif'; let actBtn = "-";
-      if(['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'].includes(APP_STATE.user.Role)) { actBtn = `<button class="btn-sm btn-info" onclick="editGuru('${guru.GuruID}')"><i class="fas fa-edit"></i> Edit</button>`; }
+      if(isManajemen()) { actBtn = `<button class="btn-sm btn-info" onclick="editGuru('${guru.GuruID}')"><i class="fas fa-edit"></i> Edit</button>`; }
       const noWAHtml = guru.No_WA ? `<a href="https://wa.me/${guru.No_WA.toString().replace(/^0/,'62')}" target="_blank" style="text-decoration:none; color:#25D366;"><i class="fab fa-whatsapp"></i> ${guru.No_WA}</a>` : '-';
       tbody.innerHTML += `<tr><td>${index+1}</td><td>${guru.NIP_NBM || '-'}</td><td><strong>${guru.NamaGuru || '-'}</strong></td><td>${noWAHtml}</td><td>${guru.MataPelajaran || '-'}</td><td><span class="badge ${bClass}">${guru.StatusAktif || 'Aktif'}</span></td><td>${actBtn}</td></tr>`;
     });
@@ -114,16 +116,11 @@
     safeSetValue('guru-mapel', guru.MataPelajaran);
     safeSetValue('guru-status', guru.StatusAktif);
 
-    // ==== Set dropdown Program Keahlian ====
     const jurusan = guru.ProgramKeahlian || '';
     const selectEl = document.getElementById('guru-jurusan');
     if (selectEl) {
       const daftarOpsi = ['Teknik Pemesinan', 'Teknik Pengelasan', 'Teknik Kendaraan Ringan', 'Teknik Sepeda Motor', 'Semua KK'];
-      if (daftarOpsi.indexOf(jurusan) !== -1) {
-        selectEl.value = jurusan;
-      } else {
-        selectEl.value = '';
-      }
+      selectEl.value = (daftarOpsi.indexOf(jurusan) !== -1) ? jurusan : '';
     }
 
     document.getElementById('modal-title-guru').innerText = 'Edit Data Guru';
@@ -169,13 +166,14 @@
   }
   function renderJadwalTable() {
     const tbody = document.getElementById('tbody-jadwal'); tbody.innerHTML = '';
-    let vw = APP_STATE.jadwals; if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(j => j.NamaGuru === APP_STATE.user.Nama || j.Supervisor === APP_STATE.user.Nama); }
+    let vw = APP_STATE.jadwals;
+    if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(j => j.NamaGuru === APP_STATE.user.Nama); }
+    if(APP_STATE.user.Role === 'SUPERVISOR') { vw = vw.filter(j => j.Supervisor === APP_STATE.user.Nama); }
     if(vw.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada jadwal untuk Anda.</td></tr>'; return; }
     
     vw.forEach(jdw => {
       let aBtn = ""; 
-      
-      if(['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'].includes(APP_STATE.user.Role)) {
+      if(isManajemen()) {
         aBtn += `<button class="btn-sm" style="background:#25D366; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAJadwal('${jdw.JadwalID}')"><i class="fab fa-whatsapp"></i> Kirim WA</button><br>`;
         aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; width:100%;" onclick="konfirmasiHapusJadwal('${jdw.JadwalID}')"><i class="fas fa-trash"></i> Hapus</button>`;
       }
@@ -186,21 +184,20 @@
   }
 
   function filterJadwalTable() {
-    const kw = document.getElementById('search-jadwal').value.toLowerCase(); let vw = APP_STATE.jadwals; 
-    if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(j => j.NamaGuru === APP_STATE.user.Nama || j.Supervisor === APP_STATE.user.Nama); }
+    const kw = document.getElementById('search-jadwal').value.toLowerCase(); let vw = APP_STATE.jadwals;
+    if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(j => j.NamaGuru === APP_STATE.user.Nama); }
+    if(APP_STATE.user.Role === 'SUPERVISOR') { vw = vw.filter(j => j.Supervisor === APP_STATE.user.Nama); }
     const flt = vw.filter(j => (j.NamaGuru && j.NamaGuru.toLowerCase().includes(kw)) || (j.Kelas && j.Kelas.toLowerCase().includes(kw)) || (j.Supervisor && j.Supervisor.toLowerCase().includes(kw)));
     const tbody = document.getElementById('tbody-jadwal'); tbody.innerHTML = '';
     if(flt.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tidak ada data.</td></tr>'; return; }
     
     flt.forEach(jdw => { 
       let aBtn = ""; 
-
-      if(['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'].includes(APP_STATE.user.Role)) {
+      if(isManajemen()) {
         aBtn += `<button class="btn-sm" style="background:#25D366; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAJadwal('${jdw.JadwalID}')"><i class="fab fa-whatsapp"></i> Kirim WA</button><br>`;
         aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; width:100%;" onclick="konfirmasiHapusJadwal('${jdw.JadwalID}')"><i class="fas fa-trash"></i> Hapus</button>`;
       }
       if(aBtn === "") aBtn = "-";
-      
       tbody.innerHTML += `<tr><td><strong>${formatTanggalIndo(jdw.Tanggal)}</strong><br><small><i class="far fa-clock"></i> ${formatWaktuIndo(jdw.Jam)}</small></td><td><strong>${jdw.NamaGuru}</strong><br><small>${jdw.JenisSupervisi}</small></td><td>${jdw.MataPelajaran}</td><td>${jdw.Kelas} <br><small>(${jdw.Ruang})</small></td><td>${jdw.Supervisor}</td><td><span class="badge badge-${jdw.Status.toLowerCase()}">${jdw.Status}</span></td><td>${aBtn}</td></tr>`; 
     });
   }
@@ -227,13 +224,14 @@
   function submitJadwal(e) { e.preventDefault(); const btn = document.getElementById('btn-save-jadwal'); btn.disabled = true; btn.innerText = 'Menyimpan...'; const fd = { GuruID: document.getElementById('jdw-guru').value, NamaGuru: document.getElementById('jdw-nama-guru').value, MataPelajaran: document.getElementById('jdw-mapel').value, Kelas: document.getElementById('jdw-kelas').value, Ruang: document.getElementById('jdw-ruang').value, Tanggal: document.getElementById('jdw-tanggal').value, Jam: document.getElementById('jdw-jam').value, Supervisor: document.getElementById('jdw-supervisor').value, JenisSupervisi: document.getElementById('jdw-jenis').value }; google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); btn.disabled = false; btn.innerText = 'Simpan Jadwal'; if(res.status === 'success') { showToast(res.message, 'success'); closeJadwalModal(); loadJadwalData(); } else { showToast(res.message, 'error'); } }).saveJadwal(fd); }
 
   // ==========================================
-  // 6. MODUL OBSERVASI & INSTRUMEN (FORM PENILAIAN)
+  // 6. MODUL OBSERVASI & INSTRUMEN
   // ==========================================
-  function mulaiObservasiDariJadwal(jadwalID) { navigateTo('observasi', 'Observasi & Instrumen'); setTimeout(() => mulaiObservasi(jadwalID), 300); }
   function loadSiapObservasi() {
     document.getElementById('obs-list-view').style.display = 'block'; document.getElementById('obs-form-view').style.display = 'none'; const tbody = document.getElementById('tbody-siap-observasi'); if(!tbody) return; tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Mencari jadwal...</td></tr>';
     google.script.run.withSuccessHandler(resStr => {
-      const res = JSON.parse(resStr); APP_STATE.jadwals = res.data || []; let siapObs = APP_STATE.jadwals.filter(j => j.Status === 'Terjadwal' || j.Status === 'Draft'); if(APP_STATE.user.Role === 'GURU') { siapObs = siapObs.filter(j => j.Supervisor === APP_STATE.user.Nama); } tbody.innerHTML = '';
+      const res = JSON.parse(resStr); APP_STATE.jadwals = res.data || []; let siapObs = APP_STATE.jadwals.filter(j => j.Status === 'Terjadwal' || j.Status === 'Draft');
+      if(APP_STATE.user.Role === 'SUPERVISOR') { siapObs = siapObs.filter(j => j.Supervisor === APP_STATE.user.Nama); }
+      tbody.innerHTML = '';
       if(siapObs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Tidak ada jadwal siap.</td></tr>'; return; }
       siapObs.forEach(jdw => { tbody.innerHTML += `<tr><td><strong>${formatTanggalIndo(jdw.Tanggal)}</strong><br><small><i class="far fa-clock"></i> ${formatWaktuIndo(jdw.Jam)}</small></td><td><strong>${jdw.NamaGuru}</strong><br><small>${jdw.MataPelajaran}</small></td><td>${jdw.Kelas}</td><td>${jdw.Supervisor}</td><td><button class="btn-sm btn-primary" onclick="mulaiObservasi('${jdw.JadwalID}')"><i class="fas fa-edit"></i> Buka</button></td></tr>`; });
     }).getJadwalList();
@@ -273,11 +271,13 @@
   // ==========================================
   function loadTindakLanjutData() { const tbody = document.getElementById('tbody-tl'); if(!tbody) return; tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>'; google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); if(res.status === 'success') { APP_STATE.tindakLanjut = res.data; renderTLTable(); } }).getObservasiSelesai(); }
   function renderTLTable() {
-    const tbody = document.getElementById('tbody-tl'); tbody.innerHTML = ''; let vw = APP_STATE.tindakLanjut || []; if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(o => o.GuruID === APP_STATE.user.GuruID || o.NamaGuru === APP_STATE.user.Nama); }
+    const tbody = document.getElementById('tbody-tl'); tbody.innerHTML = ''; let vw = APP_STATE.tindakLanjut || [];
+    if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(o => o.GuruID === APP_STATE.user.GuruID || o.NamaGuru === APP_STATE.user.Nama); }
+    if(APP_STATE.user.Role === 'SUPERVISOR') { vw = vw.filter(o => o.Supervisor === APP_STATE.user.Nama); }
     if(vw.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Belum ada hasil observasi selesai.</td></tr>'; return; }
     vw.forEach(obs => { let bTL = obs.StatusTL === 'Selesai' ? 'badge-selesai' : (obs.StatusTL === 'Dalam Proses' ? 'badge-aktif' : 'badge-dibatalkan'); tbody.innerHTML += `<tr><td>${formatTanggalIndo(obs.TanggalObservasi)}</td><td><strong>${obs.NamaGuru}</strong></td><td>${obs.MataPelajaran}<br><small>Kls: ${obs.Kelas}</small></td><td><strong>${obs.NilaiAkhir}</strong> / 100 <br><small>${obs.Predikat}</small></td><td><span class="badge ${bTL}">${obs.StatusTL}</span></td><td><button class="btn-sm btn-primary" onclick="openModalTL('${obs.ObservasiID}')"><i class="fas fa-search"></i> Evaluasi</button></td></tr>`; });
   }
-  function filterTLTable() { const kw = document.getElementById('search-tl').value.toLowerCase(); let vw = APP_STATE.tindakLanjut || []; if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(o => o.GuruID === APP_STATE.user.GuruID || o.NamaGuru === APP_STATE.user.Nama); } const flt = vw.filter(o => o.NamaGuru && o.NamaGuru.toLowerCase().includes(kw)); const tbody = document.getElementById('tbody-tl'); tbody.innerHTML = ''; flt.forEach(obs => { let bTL = obs.StatusTL === 'Selesai' ? 'badge-selesai' : (obs.StatusTL === 'Dalam Proses' ? 'badge-aktif' : 'badge-dibatalkan'); tbody.innerHTML += `<tr><td>${formatTanggalIndo(obs.TanggalObservasi)}</td><td><strong>${obs.NamaGuru}</strong></td><td>${obs.MataPelajaran}<br><small>Kls: ${obs.Kelas}</small></td><td><strong>${obs.NilaiAkhir}</strong> / 100 <br><small>${obs.Predikat}</small></td><td><span class="badge ${bTL}">${obs.StatusTL}</span></td><td><button class="btn-sm btn-primary" onclick="openModalTL('${obs.ObservasiID}')"><i class="fas fa-search"></i> Evaluasi</button></td></tr>`; }); }
+  function filterTLTable() { const kw = document.getElementById('search-tl').value.toLowerCase(); let vw = APP_STATE.tindakLanjut || []; if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(o => o.GuruID === APP_STATE.user.GuruID || o.NamaGuru === APP_STATE.user.Nama); } if(APP_STATE.user.Role === 'SUPERVISOR') { vw = vw.filter(o => o.Supervisor === APP_STATE.user.Nama); } const flt = vw.filter(o => o.NamaGuru && o.NamaGuru.toLowerCase().includes(kw)); const tbody = document.getElementById('tbody-tl'); tbody.innerHTML = ''; flt.forEach(obs => { let bTL = obs.StatusTL === 'Selesai' ? 'badge-selesai' : (obs.StatusTL === 'Dalam Proses' ? 'badge-aktif' : 'badge-dibatalkan'); tbody.innerHTML += `<tr><td>${formatTanggalIndo(obs.TanggalObservasi)}</td><td><strong>${obs.NamaGuru}</strong></td><td>${obs.MataPelajaran}<br><small>Kls: ${obs.Kelas}</small></td><td><strong>${obs.NilaiAkhir}</strong> / 100 <br><small>${obs.Predikat}</small></td><td><span class="badge ${bTL}">${obs.StatusTL}</span></td><td><button class="btn-sm btn-primary" onclick="openModalTL('${obs.ObservasiID}')"><i class="fas fa-search"></i> Evaluasi</button></td></tr>`; }); }
   function openModalTL(obsID) {
     const obs = APP_STATE.tindakLanjut.find(o => o.ObservasiID === obsID); if(!obs) return; document.getElementById('tl-nama-guru').innerText = obs.NamaGuru; document.getElementById('tl-info-obs').innerText = `${obs.MataPelajaran} - Kelas ${obs.Kelas}`; document.getElementById('tl-nilai').innerText = obs.NilaiAkhir; document.getElementById('tl-predikat').innerText = obs.Predikat; document.getElementById('tl-obs-id').value = obs.ObservasiID; document.getElementById('tl-guru-id').value = obs.GuruID;
     if(obs.DataTL) { document.getElementById('tl-temuan').value = obs.DataTL.Temuan||''; document.getElementById('tl-rekomendasi').value = obs.DataTL.Rekomendasi||''; document.getElementById('tl-rencana').value = obs.DataTL.RencanaTindakLanjut||''; document.getElementById('tl-target').value = obs.DataTL.TargetTanggal||''; document.getElementById('tl-status').value = obs.DataTL.Status||'Belum Dimulai'; document.getElementById('tl-catatan').value = obs.DataTL.CatatanSupervisor||''; } else { document.getElementById('formTL').reset(); document.getElementById('tl-obs-id').value = obs.ObservasiID; document.getElementById('tl-guru-id').value = obs.GuruID; }
@@ -344,17 +344,13 @@
         if(adminData.length === 0) {
             listAdmin.innerHTML = '<li style="color:#999; list-style:none; margin-left:-20px; text-align:center; font-style:italic;">Belum ada data.</li>';
         } else {
-            adminData.forEach(item => {
-                listAdmin.innerHTML += `<li>${item.NamaGuru}</li>`;
-            });
+            adminData.forEach(item => { listAdmin.innerHTML += `<li>${item.NamaGuru}</li>`; });
         }
         
         if(pelaksanaanData.length === 0) {
             listPelaksanaan.innerHTML = '<li style="color:#999; list-style:none; margin-left:-20px; text-align:center; font-style:italic;">Belum ada data.</li>';
         } else {
-            pelaksanaanData.forEach(item => {
-                listPelaksanaan.innerHTML += `<li>${item.NamaGuru}</li>`;
-            });
+            pelaksanaanData.forEach(item => { listPelaksanaan.innerHTML += `<li>${item.NamaGuru}</li>`; });
         }
     }
   }
@@ -362,7 +358,7 @@
   function filterLaporanTable() {
     const jenisFilter = document.getElementById('filter-jenis-laporan').value; const kw = document.getElementById('search-laporan').value.toLowerCase(); let vw = APP_STATE.laporanDetail || []; if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(d => d.NamaGuru === APP_STATE.user.Nama); } vw = vw.filter(d => d.JenisSupervisi === jenisFilter); if(kw) { vw = vw.filter(d => d.NamaGuru.toLowerCase().includes(kw) || d.MataPelajaran.toLowerCase().includes(kw)); } APP_STATE.laporanView = vw; 
     const tbody = document.getElementById('tbody-laporan'); if(!tbody) return; tbody.innerHTML = ''; if(vw.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Tidak ada data pada kategori ini.</td></tr>'; return; }
-    vw.forEach(item => { let bTL = item.StatusTL === 'Selesai' ? 'badge-selesai' : (item.StatusTL === 'Dalam Proses' ? 'badge-aktif' : 'badge-dibatalkan'); let aksiCetak = `<button class="btn-sm btn-info" onclick="cetakInstrumen('${item.ObservasiID}')" style="margin-bottom:4px; width:100%;"><i class="fas fa-print"></i> Detail</button>`; if(['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'KEPSEK', 'WAKA'].includes(APP_STATE.user.Role)) { aksiCetak += `<br><button class="btn-sm" style="background:#dc3545; color:white; border:none; width:100%;" onclick="konfirmasiHapusObservasi('${item.ObservasiID}')"><i class="fas fa-trash"></i> Hapus</button>`; } tbody.innerHTML += `<tr><td style="text-align:center;">${formatTanggalIndo(item.Tanggal)}</td><td><strong>${item.NamaGuru}</strong></td><td style="text-align:center;">${item.MataPelajaran}</td><td style="text-align:center;"><strong>${item.Nilai}</strong></td><td style="text-align:center;">${item.Predikat}</td><td style="text-align:center;"><span class="badge ${bTL}">${item.StatusTL}</span></td><td class="no-print" style="text-align:center;">${aksiCetak}</td></tr>`; });
+    vw.forEach(item => { let bTL = item.StatusTL === 'Selesai' ? 'badge-selesai' : (item.StatusTL === 'Dalam Proses' ? 'badge-aktif' : 'badge-dibatalkan'); let aksiCetak = `<button class="btn-sm btn-info" onclick="cetakInstrumen('${item.ObservasiID}')" style="margin-bottom:4px; width:100%;"><i class="fas fa-print"></i> Detail</button>`; if(isManajemen()) { aksiCetak += `<br><button class="btn-sm" style="background:#dc3545; color:white; border:none; width:100%;" onclick="konfirmasiHapusObservasi('${item.ObservasiID}')"><i class="fas fa-trash"></i> Hapus</button>`; } tbody.innerHTML += `<tr><td style="text-align:center;">${formatTanggalIndo(item.Tanggal)}</td><td><strong>${item.NamaGuru}</strong></td><td style="text-align:center;">${item.MataPelajaran}</td><td style="text-align:center;"><strong>${item.Nilai}</strong></td><td style="text-align:center;">${item.Predikat}</td><td style="text-align:center;"><span class="badge ${bTL}">${item.StatusTL}</span></td><td class="no-print" style="text-align:center;">${aksiCetak}</td></tr>`; });
   }
 
   function konfirmasiHapusObservasi(id) { if(confirm("Yakin ingin menghapus data Laporan Observasi ini? Seluruh instrumen nilai dan tindak lanjut akan ikut terhapus permanen!")) { showToast("Sedang menghapus data...", "info"); google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); if(res.status === 'success') { showToast(res.message, 'success'); loadLaporanData(); } else showToast(res.message, 'error'); }).hapusDataObservasi(id); } }
@@ -411,13 +407,8 @@
     });
   }
 
-  function openModalInstrumen() {
-    document.getElementById('formInstrumen').reset(); document.getElementById('ins-id').value = '';
-    document.getElementById('modal-title-instrumen').innerText = 'Tambah Instrumen'; document.getElementById('modal-instrumen').style.display = 'flex';
-  }
-
+  function openModalInstrumen() { document.getElementById('formInstrumen').reset(); document.getElementById('ins-id').value = ''; document.getElementById('modal-title-instrumen').innerText = 'Tambah Instrumen'; document.getElementById('modal-instrumen').style.display = 'flex'; }
   function closeModalInstrumen() { document.getElementById('modal-instrumen').style.display = 'none'; }
-
   function editInstrumen(id) {
     const ins = APP_STATE.allInstrumens.find(i => i.InstrumenID === id); if(!ins) return;
     document.getElementById('ins-id').value = ins.InstrumenID;
@@ -428,47 +419,90 @@
     document.getElementById('ins-status').value = ins.Status;
     document.getElementById('modal-title-instrumen').innerText = 'Edit Instrumen'; document.getElementById('modal-instrumen').style.display = 'flex';
   }
-
   function submitInstrumen(e) {
     e.preventDefault(); const btn = document.getElementById('btn-save-instrumen'); btn.disabled = true; btn.innerText = 'Menyimpan...';
-    const fd = {
-      InstrumenID: document.getElementById('ins-id').value,
-      Jenis: document.getElementById('ins-jenis').value,
-      Aspek: document.getElementById('ins-aspek').value,
-      Indikator: document.getElementById('ins-indikator').value,
-      Urutan: document.getElementById('ins-urutan').value,
-      Status: document.getElementById('ins-status').value
-    };
-    google.script.run.withSuccessHandler(r => {
-      const res = JSON.parse(r); btn.disabled = false; btn.innerText = 'Simpan Instrumen';
-      if(res.status === 'success') { showToast(res.message, 'success'); closeModalInstrumen(); loadInstrumenAdmin(); } else showToast(res.message, 'error');
-    }).saveInstrumenData(fd);
+    const fd = { InstrumenID: document.getElementById('ins-id').value, Jenis: document.getElementById('ins-jenis').value, Aspek: document.getElementById('ins-aspek').value, Indikator: document.getElementById('ins-indikator').value, Urutan: document.getElementById('ins-urutan').value, Status: document.getElementById('ins-status').value };
+    google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); btn.disabled = false; btn.innerText = 'Simpan Instrumen'; if(res.status === 'success') { showToast(res.message, 'success'); closeModalInstrumen(); loadInstrumenAdmin(); } else showToast(res.message, 'error'); }).saveInstrumenData(fd);
   }
-
-  function hapusInstrumen(id) {
-    if(confirm("Yakin ingin menghapus butir instrumen ini secara permanen?")) {
-      showToast("Sedang menghapus...", "info");
-      google.script.run.withSuccessHandler(r => {
-        const res = JSON.parse(r);
-        if(res.status === 'success') { showToast(res.message, 'success'); loadInstrumenAdmin(); } else showToast(res.message, 'error');
-      }).hapusDataInstrumen(id);
-    }
-  }
+  function hapusInstrumen(id) { if(confirm("Yakin ingin menghapus butir instrumen ini secara permanen?")) { showToast("Sedang menghapus...", "info"); google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); if(res.status === 'success') { showToast(res.message, 'success'); loadInstrumenAdmin(); } else showToast(res.message, 'error'); }).hapusDataInstrumen(id); } }
 
   // ==========================================
   // 10. LOGIN, AUTH & INIT
   // ==========================================
-  function switchLoginTab(type) { document.getElementById('tab-admin').classList.remove('active'); document.getElementById('tab-guru').classList.remove('active'); document.getElementById('tab-' + type).classList.add('active'); document.getElementById('loginFormAdmin').style.display = 'none'; document.getElementById('loginFormGuru').style.display = 'none'; if(type === 'admin') document.getElementById('loginFormAdmin').style.display = 'block'; else document.getElementById('loginFormGuru').style.display = 'block'; }
-  function handleLogin(type) { const u = document.getElementById('username-' + type).value, p = document.getElementById('password-' + type).value, btn = document.getElementById('btn-login-' + type); if(!u || !p) return showToast('Wajib diisi!', 'error'); btn.disabled = true; btn.innerText = 'Memproses...'; google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); btn.disabled = false; btn.innerText = 'Masuk'; if(res.status === 'success') { APP_STATE.user = res.data; APP_STATE.isLoggedIn = true; sessionStorage.setItem('simpro_user', JSON.stringify(res.data)); initApp(); } else showToast(res.message, 'error'); }).serverLogin(u, p); }
-  function handleLogout() { sessionStorage.removeItem('simpro_user'); APP_STATE.user = null; APP_STATE.isLoggedIn = false; document.getElementById('login-layout').style.display = 'flex'; document.getElementById('app-layout').style.display = 'none'; document.getElementById('loginFormAdmin').reset(); document.getElementById('loginFormGuru').reset(); showToast('Berhasil keluar', 'success'); }
+  function switchLoginTab(type) {
+    ['admin', 'guru', 'supervisor'].forEach(t => {
+      const tab = document.getElementById('tab-' + t);
+      if (tab) tab.classList.remove('active');
+    });
+    document.getElementById('loginFormAdmin').style.display = 'none';
+    document.getElementById('loginFormGuru').style.display = 'none';
+    document.getElementById('loginFormSupervisor').style.display = 'none';
+
+    document.getElementById('tab-' + type).classList.add('active');
+    if (type === 'admin') document.getElementById('loginFormAdmin').style.display = 'block';
+    else if (type === 'guru') document.getElementById('loginFormGuru').style.display = 'block';
+    else if (type === 'supervisor') document.getElementById('loginFormSupervisor').style.display = 'block';
+  }
+
+  function handleLogin(type) {
+    const u = document.getElementById('username-' + type).value;
+    const p = document.getElementById('password-' + type).value;
+    const btn = document.getElementById('btn-login-' + type);
+    if (!u || !p) return showToast('Wajib diisi!', 'error');
+    btn.disabled = true;
+    btn.innerText = 'Memproses...';
+
+    // Tentukan role yang diharapkan berdasarkan tab login
+    let expectedRole = [];
+    if (type === 'admin') expectedRole = ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'];
+    else if (type === 'guru') expectedRole = ['GURU'];
+    else if (type === 'supervisor') expectedRole = ['SUPERVISOR'];
+
+    google.script.run.withSuccessHandler(r => {
+      const res = JSON.parse(r);
+      btn.disabled = false;
+      btn.innerText = 'Masuk';
+      if (res.status === 'success') {
+        if (expectedRole.indexOf(res.data.Role) === -1) {
+          const roleNames = { 'ADMIN': 'Admin', 'KEPALA_SEKOLAH': 'Kepala Sekolah', 'WKS_KURIKULUM': 'WKS Kurikulum', 'GURU': 'Guru', 'SUPERVISOR': 'Supervisor' };
+          const myRole = roleNames[res.data.Role] || res.data.Role;
+          showToast('Akun Anda terdaftar sebagai ' + myRole + '. Silakan pilih tab login yang sesuai.', 'error');
+          return;
+        }
+        APP_STATE.user = res.data;
+        APP_STATE.isLoggedIn = true;
+        sessionStorage.setItem('simpro_user', JSON.stringify(res.data));
+        initApp();
+      } else {
+        showToast(res.message, 'error');
+      }
+    }).serverLogin(u, p);
+  }
+
+  function handleLogout() {
+    sessionStorage.removeItem('simpro_user');
+    APP_STATE.user = null;
+    APP_STATE.isLoggedIn = false;
+    document.getElementById('login-layout').style.display = 'flex';
+    document.getElementById('app-layout').style.display = 'none';
+    document.getElementById('loginFormAdmin').reset();
+    document.getElementById('loginFormGuru').reset();
+    document.getElementById('loginFormSupervisor').reset();
+    showToast('Berhasil keluar', 'success');
+  }
 
   function openPasswordModal() { document.getElementById('modal-password').style.display = 'flex'; }
   function closePasswordModal() { document.getElementById('modal-password').style.display = 'none'; document.getElementById('formPassword').reset(); }
   function submitPasswordChange(e) { e.preventDefault(); const lama = document.getElementById('pass-lama').value, baru = document.getElementById('pass-baru').value, btn = document.getElementById('btn-save-pass'); if(baru.length < 4) return showToast("Password baru minimal 4 karakter!", "error"); btn.disabled = true; btn.innerText = 'Menyimpan...'; google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); btn.disabled = false; btn.innerText = 'Simpan Password Baru'; if(res.status === 'success') { showToast(res.message, 'success'); closePasswordModal(); } else showToast(res.message, 'error'); }).changePassword(APP_STATE.user.UserID, lama, baru); }
 
-  function initApp() { document.getElementById('login-layout').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; document.getElementById('welcome-user').innerText = APP_STATE.user.Nama + ' (' + APP_STATE.user.Role + ')'; renderSidebar(); navigateTo('dashboard', 'Dashboard'); }
+  function initApp() {
+    document.getElementById('login-layout').style.display = 'none';
+    document.getElementById('app-layout').style.display = 'flex';
+    document.getElementById('welcome-user').innerText = APP_STATE.user.Nama + ' (' + APP_STATE.user.Role + ')';
+    renderSidebar();
+    navigateTo('dashboard', 'Dashboard');
+  }
 
-  // ===== Tunggu includes-loaded, bukan window.onload =====
   window.addEventListener('includes-loaded', function() {
     document.getElementById('app-layout').style.display = 'none';
     const su = sessionStorage.getItem('simpro_user');
