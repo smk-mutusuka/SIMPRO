@@ -7,25 +7,46 @@
 
 var API_URL = 'https://script.google.com/macros/s/AKfycbzkVsmVwLGKBMMYlEN7KBf38cPsYxcIDV1PG5BgZPWnGgiigEkR4kUa5UOoMNYaiaN7/exec';
 
+// =============================================================
+// DAFTAR ACTION yang pakai method POST
+// (yang tidak ada di sini otomatis dianggap GET)
+// =============================================================
 var POST_ACTIONS = [
+  // Auth
   'serverLogin',
   'changePassword',
+  // Guru
   'saveGuruData',
+  // Jadwal
   'saveJadwal',
+  'ajukanJadwal',        // ← TAHAP B (baru)
+  'approveJadwal',       // ← TAHAP B (baru)
+  'tolakJadwal',         // ← TAHAP B (baru)
+  'batalkanPengajuan',   // ← TAHAP B (baru)
   'hapusDataJadwal',
+  // Observasi
   'saveObservasi',
   'hapusDataObservasi',
+  // Instrumen
   'saveInstrumenData',
   'hapusDataInstrumen',
+  // Tindak Lanjut
   'saveTindakLanjut',
+  // Drive
   'uploadFileToDrive'
 ];
 
+// =============================================================
+// DAFTAR ACTION GET yang butuh argumen (dikirim via query string)
+// =============================================================
 var GET_ARGS_MAP = {
   'getDraftObservasi': ['jadwalID'],
   'getDetailCetakLengkap': ['obsID']
 };
 
+// =============================================================
+// FUNGSI UTAMA
+// =============================================================
 async function apiCall(action, ...args) {
   const isPost = POST_ACTIONS.indexOf(action) !== -1;
   const url = new URL(API_URL);
