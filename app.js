@@ -697,12 +697,7 @@
     const linkDok = document.getElementById('obs-link-dok'); if(linkDok) linkDok.style.display = 'none';
     const container = document.getElementById('instrumen-container');
     container.innerHTML = '<div style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Memuat instrumen...</div>';
-    
-        document.getElementById('formObservasi').reset();
-    const linkDok = document.getElementById('obs-link-dok'); if(linkDok) linkDok.style.display = 'none';
-    const container = document.getElementById('instrumen-container');
-    container.innerHTML = '<div style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Memuat instrumen...</div>';
-    
+        
     // Prefill Topik dari jadwal
     const topikEl = document.getElementById('obs-topik');
     if (topikEl) topikEl.value = jadwal.Topik || '';
