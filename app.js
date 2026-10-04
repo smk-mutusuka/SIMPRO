@@ -100,8 +100,11 @@
     if(pageId === 'supervisor') loadSupervisorData();
   }
 
-  function renderSidebar() {
-    const menuContainer = document.getElementById('sidebar-menu'); menuContainer.innerHTML = '';
+    function renderSidebar() {
+    const menuContainer = document.getElementById('sidebar-menu'); 
+    menuContainer.innerHTML = '';
+    
+    // Menu utama
     MENU_CONFIG.forEach(menu => {
       if(menu.roles.includes(APP_STATE.user.Role)) {
         const li = document.createElement('li');
@@ -109,6 +112,16 @@
         menuContainer.appendChild(li);
       }
     });
+    
+    // Item menu: Ubah Password
+    const liPass = document.createElement('li');
+    liPass.innerHTML = `<a href="#" onclick="event.preventDefault(); openPasswordModal()"><i class="fas fa-key"></i> Ubah Password</a>`;
+    menuContainer.appendChild(liPass);
+    
+    // Item menu: Keluar (warna merah)
+    const liLogout = document.createElement('li');
+    liLogout.innerHTML = `<a href="#" onclick="event.preventDefault(); handleLogout()" style="color:#ff8a95;"><i class="fas fa-sign-out-alt"></i> Keluar</a>`;
+    menuContainer.appendChild(liLogout);
     
     const btnAddGuru = document.getElementById('btn-add-guru');
     if (btnAddGuru) btnAddGuru.style.display = isManajemen() ? 'inline-block' : 'none';
