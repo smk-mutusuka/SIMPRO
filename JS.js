@@ -9,11 +9,11 @@
     { id: 'dashboard',     icon: 'fas fa-home',               title: 'Dashboard',              roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
     { id: 'guru',          icon: 'fas fa-chalkboard-teacher', title: 'Data Guru',              roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'GURU'] },
     { id: 'jadwal',        icon: 'fas fa-calendar-alt',       title: 'Jadwal Supervisi',       roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
+    { id: 'supervisor',    icon: 'fas fa-user-tie',           title: 'Data Supervisor',        roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] },
     { id: 'observasi',     icon: 'fas fa-eye',                title: 'Observasi & Instrumen',  roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR'] },
     { id: 'tindak-lanjut', icon: 'fas fa-sync-alt',           title: 'Tindak Lanjut',          roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
     { id: 'laporan',       icon: 'fas fa-chart-pie',          title: 'Laporan',                roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] },
-    { id: 'instrumen',     icon: 'fas fa-list-ul',            title: 'Manajemen Instrumen',    roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] },
-    { id: 'supervisor',    icon: 'fas fa-user-tie',           title: 'Data Supervisor',        roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] }
+    { id: 'instrumen',     icon: 'fas fa-list-ul',            title: 'Manajemen Instrumen',    roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] }
   ];
 
   function isManajemen() {
