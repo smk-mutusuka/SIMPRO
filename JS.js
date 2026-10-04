@@ -7,7 +7,7 @@
 
   const MENU_CONFIG = [
     { id: 'dashboard',     icon: 'fas fa-home',              title: 'Dashboard',              roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
-    { id: 'guru',          icon: 'fas fa-chalkboard-teacher', title: 'Data Guru',              roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] },
+    { id: 'guru',          icon: 'fas fa-chalkboard-teacher', title: 'Data Guru',             roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'GURU'] },
     { id: 'jadwal',        icon: 'fas fa-calendar-alt',      title: 'Jadwal Supervisi',       roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
     { id: 'observasi',     icon: 'fas fa-eye',               title: 'Observasi & Instrumen',  roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR'] },
     { id: 'tindak-lanjut', icon: 'fas fa-sync-alt',          title: 'Tindak Lanjut',          roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
@@ -61,7 +61,7 @@
     if(pageId === 'instrumen') loadInstrumenAdmin();
   }
 
-  function renderSidebar() {
+    function renderSidebar() {
     const menuContainer = document.getElementById('sidebar-menu'); menuContainer.innerHTML = '';
     MENU_CONFIG.forEach(menu => {
       if(menu.roles.includes(APP_STATE.user.Role)) {
@@ -70,7 +70,14 @@
         menuContainer.appendChild(li);
       }
     });
-    // Sembunyikan tombol "Buat Jadwal" untuk GURU (nanti diganti tombol "Ajukan Jadwal" di TAHAP B)
+    
+    // Tombol "+ Tambah Guru": hanya manajemen
+    const btnAddGuru = document.getElementById('btn-add-guru');
+    if (btnAddGuru) {
+      btnAddGuru.style.display = isManajemen() ? 'inline-block' : 'none';
+    }
+    
+    // Sembunyikan tombol "Buat Jadwal" untuk GURU/SUPERVISOR
     if(APP_STATE.user.Role === 'GURU' || APP_STATE.user.Role === 'SUPERVISOR') {
       const btnAdd = document.getElementById('btn-add-jadwal');
       if(btnAdd) btnAdd.style.display = 'none';
@@ -81,31 +88,58 @@
   // ==========================================
   // 4. MODUL DATA GURU
   // ==========================================
-  function loadGuruData() {
-    const tbody = document.getElementById('tbody-guru'); if(!tbody) return; tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
-    google.script.run.withSuccessHandler(resStr => { const res = JSON.parse(resStr); if(res.status === 'success') { APP_STATE.gurus = res.data; renderGuruTable(res.data); } }).getGuruList();
+    function loadGuruData() {
+    const tbody = document.getElementById('tbody-guru'); if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
+    google.script.run.withSuccessHandler(resStr => {
+      const res = JSON.parse(resStr);
+      if(res.status === 'success') {
+        APP_STATE.gurus = res.data;
+        // Kalau role GURU, tampilkan hanya dirinya sendiri
+        let dataToShow = res.data;
+        if (APP_STATE.user.Role === 'GURU') {
+          dataToShow = res.data.filter(g => g.NIP_NBM && g.NIP_NBM.toString() === APP_STATE.user.NIP_NBM.toString());
+        }
+        renderGuruTable(dataToShow);
+      }
+    }).getGuruList();
   }
-  function renderGuruTable(data) {
+    function renderGuruTable(data) {
     const tbody = document.getElementById('tbody-guru'); tbody.innerHTML = '';
     if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data guru.</td></tr>'; return; }
     data.forEach((guru, index) => {
-      const bClass = guru.StatusAktif === 'Aktif' ? 'badge-aktif' : 'badge-nonaktif'; let actBtn = "-";
-      if(isManajemen()) { actBtn = `<button class="btn-sm btn-info" onclick="editGuru('${guru.GuruID}')"><i class="fas fa-edit"></i> Edit</button>`; }
+      const bClass = guru.StatusAktif === 'Aktif' ? 'badge-aktif' : 'badge-nonaktif';
+      let actBtn = "-";
+      
+      // Tombol Edit: manajemen bisa semua, guru hanya untuk dirinya sendiri
+      const bolehEdit = isManajemen() || (guru.NIP_NBM && guru.NIP_NBM.toString() === APP_STATE.user.NIP_NBM.toString());
+      if (bolehEdit) {
+        actBtn = `<button class="btn-sm btn-info" onclick="editGuru('${guru.GuruID}')"><i class="fas fa-edit"></i> Edit</button>`;
+      }
+      
       const noWAHtml = guru.No_WA ? `<a href="https://wa.me/${guru.No_WA.toString().replace(/^0/,'62')}" target="_blank" style="text-decoration:none; color:#25D366;"><i class="fab fa-whatsapp"></i> ${guru.No_WA}</a>` : '-';
       tbody.innerHTML += `<tr><td>${index+1}</td><td>${guru.NIP_NBM || '-'}</td><td><strong>${guru.NamaGuru || '-'}</strong></td><td>${noWAHtml}</td><td>${guru.MataPelajaran || '-'}</td><td><span class="badge ${bClass}">${guru.StatusAktif || 'Aktif'}</span></td><td>${actBtn}</td></tr>`;
     });
   }
   function filterGuruTable() { const kw = document.getElementById('search-guru').value.toLowerCase(); renderGuruTable(APP_STATE.gurus.filter(g => (g.NamaGuru && g.NamaGuru.toLowerCase().includes(kw)) || (g.NIP_NBM && g.NIP_NBM.toString().toLowerCase().includes(kw)))); }
-  function openModalGuru() {
+    function openModalGuru() {
+    if (!isManajemen()) {
+      return showToast('Anda tidak berhak menambah guru baru.', 'error');
+    }
     document.getElementById('formGuru').reset();
     safeSetValue('guru-id', '');
     safeSetValue('guru-nbm-lama', '');
+    // Reset readonly
+    const nbmEl = document.getElementById('guru-nbm');
+    const statusEl = document.getElementById('guru-status');
+    if (nbmEl) { nbmEl.readOnly = false; nbmEl.style.background = ''; }
+    if (statusEl) { statusEl.disabled = false; statusEl.style.background = ''; }
     document.getElementById('modal-title-guru').innerText = 'Tambah Data Guru Baru';
     document.getElementById('modal-guru').style.display = 'flex';
   }
   function closeModalGuru() { document.getElementById('modal-guru').style.display = 'none'; }
 
-  function editGuru(guruID) {
+    function editGuru(guruID) {
     const guru = APP_STATE.gurus.find(g => g.GuruID === guruID); if(!guru) return;
     safeSetValue('guru-id', guru.GuruID);
     safeSetValue('guru-nbm-lama', guru.NIP_NBM);
@@ -123,11 +157,22 @@
       selectEl.value = (daftarOpsi.indexOf(jurusan) !== -1) ? jurusan : '';
     }
 
-    document.getElementById('modal-title-guru').innerText = 'Edit Data Guru';
+    // Kalau GURU: readonly NBM & Status
+    const nbmEl = document.getElementById('guru-nbm');
+    const statusEl = document.getElementById('guru-status');
+    if (isManajemen()) {
+      if (nbmEl) { nbmEl.readOnly = false; nbmEl.style.background = ''; }
+      if (statusEl) { statusEl.disabled = false; statusEl.style.background = ''; }
+    } else {
+      if (nbmEl) { nbmEl.readOnly = true; nbmEl.style.background = '#f0f0f0'; }
+      if (statusEl) { statusEl.disabled = true; statusEl.style.background = '#f0f0f0'; }
+    }
+
+    document.getElementById('modal-title-guru').innerText = isManajemen() ? 'Edit Data Guru' : 'Edit Data Saya';
     document.getElementById('modal-guru').style.display = 'flex';
   }
 
-  function submitGuru(e) {
+    function submitGuru(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-save-guru');
     btn.disabled = true;
@@ -141,7 +186,10 @@
       JK: document.getElementById('guru-jk').value,
       Mapel: document.getElementById('guru-mapel').value,
       Jurusan: document.getElementById('guru-jurusan').value,
-      Status: document.getElementById('guru-status').value
+      Status: document.getElementById('guru-status').value,
+      // Identitas pemanggil untuk validasi server
+      CurrentUserRole: APP_STATE.user.Role,
+      CurrentUserNBM: APP_STATE.user.NIP_NBM
     };
     google.script.run.withSuccessHandler(resStr => {
       const res = JSON.parse(resStr);
