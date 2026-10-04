@@ -984,22 +984,30 @@
     }
   }
 
-  function exportToExcel() {
+    function exportToExcel() {
     const data = APP_STATE.laporanView || [];
     if(data.length === 0) return showToast("Tidak ada data diekspor!", "error");
-    let csvContent = "data:text/csv;charset=utf-8,TANGGAL,NAMA GURU,MATA PELAJARAN,NILAI AKHIR,PREDIKAT,STATUS TINDAK LANJUT\n";
+    
+    // Gunakan separator ; untuk Excel Indonesia
+    let csv = "TANGGAL;NAMA GURU;MATA PELAJARAN;NILAI AKHIR;PREDIKAT;STATUS TINDAK LANJUT\n";
     data.forEach(item => {
       let tgl = formatTanggalIndo(item.Tanggal);
-      let nama = item.NamaGuru ? item.NamaGuru.replace(/"/g, '""') : "";
-      let mapel = item.MataPelajaran ? item.MataPelajaran.replace(/"/g, '""') : "";
-      csvContent += `"${tgl}","${nama}","${mapel}",${item.Nilai},"${item.Predikat}","${item.StatusTL}"\n`;
+      let nama = item.NamaGuru ? item.NamaGuru.replace(/;/g, ',') : "";
+      let mapel = item.MataPelajaran ? item.MataPelajaran.replace(/;/g, ',') : "";
+      csv += `"${tgl}";"${nama}";"${mapel}";${item.Nilai};"${item.Predikat}";"${item.StatusTL}"\n`;
     });
-    const encodedUri = encodeURI(csvContent);
+    
+    // Tambahkan BOM UTF-8 agar huruf beraksen tampil benar
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     const sel = document.getElementById('filter-jenis-laporan');
     link.setAttribute("download", `Data_${sel.options[sel.selectedIndex].text.replace(/ /g, "_")}.csv`);
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     showToast("File Excel diunduh!", "success");
   }
 
