@@ -45,12 +45,18 @@
     try { if (!isoStr.includes('T') && isoStr.includes(':')) { return isoStr.substring(0,5); } const d = new Date(isoStr); if(isNaN(d.getTime())) return isoStr; return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; } catch(e) { return isoStr; }
   }
   function showToast(message, type = 'success') {
-    const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.innerText = message; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    const container = document.getElementById('toast-container'); 
+    if (!container) return;
+    const toast = document.createElement('div'); 
+    toast.className = `toast ${type}`; 
+    toast.innerText = message; 
+    container.appendChild(toast); 
+    setTimeout(() => toast.classList.add('show'), 10); 
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
   }
   function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
-  function safeSetText(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
 
-  // Helper: ambil nomor WA dari objek guru dengan berbagai kemungkinan nama key
+  // Ambil nomor WA dari berbagai kemungkinan key
   function extractNoWA(guru) {
     if (!guru) return '';
     const keys = ['No_WA', 'NoWA', 'no_wa', 'noWA', 'NoHp', 'NoHP', 'noHp', 'WhatsApp', 'whatsapp'];
@@ -61,12 +67,12 @@
     return '';
   }
 
-  // Helper: normalisasi nama (hapus tanda baca & spasi, lowercase)
+  // Normalisasi nama (hapus tanda baca & spasi, lowercase)
   function normalizeName(s) {
     return (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
   }
 
-  // Helper: normalisasi tanggal ke format YYYY-MM-DD (untuk input date)
+  // Normalisasi tanggal ke YYYY-MM-DD untuk input date
   function toInputDate(val) {
     if (!val) return '';
     try {
@@ -86,10 +92,15 @@
     document.querySelectorAll('.page-section').forEach(el => { el.style.display = 'none'; });
     const targetPage = document.getElementById('page-' + pageId);
     if(targetPage) { targetPage.style.display = 'block'; } else { showToast('Halaman belum tersedia.', 'error'); }
-    document.getElementById('page-title').innerText = title;
+    const pageTitleEl = document.getElementById('page-title');
+    if (pageTitleEl) pageTitleEl.innerText = title;
     document.querySelectorAll('.sidebar-menu a').forEach(el => { el.classList.remove('active'); });
-    const activeLink = document.getElementById('menu-' + pageId); if(activeLink) activeLink.classList.add('active');
-    if(window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); }
+    const activeLink = document.getElementById('menu-' + pageId); 
+    if(activeLink) activeLink.classList.add('active');
+    if(window.innerWidth <= 768) { 
+      const sb = document.getElementById('sidebar'); 
+      if (sb) sb.classList.remove('open'); 
+    }
     
     if(pageId === 'guru') loadGuruData(); 
     if(pageId === 'jadwal') { updateTombolJadwal(); loadJadwalData(); }
@@ -100,11 +111,11 @@
     if(pageId === 'supervisor') loadSupervisorData();
   }
 
-      function renderSidebar() {
+  function renderSidebar() {
     const menuContainer = document.getElementById('sidebar-menu'); 
+    if (!menuContainer) return;
     menuContainer.innerHTML = '';
     
-    // Menu utama
     MENU_CONFIG.forEach(menu => {
       if(menu.roles.includes(APP_STATE.user.Role)) {
         const li = document.createElement('li');
@@ -113,12 +124,10 @@
       }
     });
     
-    // Item menu: Ubah Password
     const liPass = document.createElement('li');
     liPass.innerHTML = `<a href="#" onclick="event.preventDefault(); openPasswordModal()"><i class="fas fa-key"></i> Ubah Password</a>`;
     menuContainer.appendChild(liPass);
     
-    // Item menu: Keluar (warna merah)
     const liLogout = document.createElement('li');
     liLogout.innerHTML = `<a href="#" onclick="event.preventDefault(); handleLogout()" style="color:#ff8a95;"><i class="fas fa-sign-out-alt"></i> Keluar</a>`;
     menuContainer.appendChild(liLogout);
@@ -131,13 +140,14 @@
       if(btnAdd) btnAdd.style.display = 'none';
     }
   }
-  function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+  function toggleSidebar() { const sb = document.getElementById('sidebar'); if (sb) sb.classList.toggle('open'); }
 
   // ==========================================
   // 4. MODUL DATA GURU
   // ==========================================
   function loadGuruData() {
-    const tbody = document.getElementById('tbody-guru'); if(!tbody) return;
+    const tbody = document.getElementById('tbody-guru'); 
+    if(!tbody) return;
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
     apiCall('getGuruList')
       .then(res => {
@@ -158,7 +168,9 @@
   }
 
   function renderGuruTable(data) {
-    const tbody = document.getElementById('tbody-guru'); tbody.innerHTML = '';
+    const tbody = document.getElementById('tbody-guru'); 
+    if (!tbody) return;
+    tbody.innerHTML = '';
     if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data guru.</td></tr>'; return; }
     data.forEach((guru, index) => {
       const bClass = guru.StatusAktif === 'Aktif' ? 'badge-aktif' : 'badge-nonaktif';
@@ -182,7 +194,7 @@
   }
 
   function filterGuruTable() {
-    const kw = document.getElementById('search-guru').value.toLowerCase();
+    const kw = (document.getElementById('search-guru').value || '').toLowerCase();
     let base = APP_STATE.gurus;
     if (APP_STATE.user.Role === 'GURU') {
       base = base.filter(g => isGuruSendiri(g));
@@ -208,7 +220,8 @@
   function closeModalGuru() { document.getElementById('modal-guru').style.display = 'none'; }
 
   function editGuru(guruID) {
-    const guru = APP_STATE.gurus.find(g => g.GuruID === guruID); if(!guru) return;
+    const guru = APP_STATE.gurus.find(g => g.GuruID === guruID); 
+    if(!guru) return;
     safeSetValue('guru-id', guru.GuruID);
     safeSetValue('guru-nbm-lama', guru.NIP_NBM);
     safeSetValue('guru-nbm', guru.NIP_NBM);
@@ -234,7 +247,6 @@
       if (statusEl) { statusEl.disabled = false; statusEl.style.background = ''; statusEl.style.pointerEvents = ''; statusEl.style.cursor = ''; }
       if (namaEl) { namaEl.readOnly = false; namaEl.style.background = ''; namaEl.style.cursor = ''; }
     } else {
-      // GURU: kunci Nama, NBM, Status
       if (nbmEl) { nbmEl.readOnly = true; nbmEl.style.background = '#f0f0f0'; nbmEl.style.cursor = 'not-allowed'; }
       if (statusEl) { statusEl.disabled = true; statusEl.style.background = '#f0f0f0'; statusEl.style.pointerEvents = 'none'; statusEl.style.cursor = 'not-allowed'; statusEl.setAttribute('tabindex', '-1'); }
       if (namaEl) { namaEl.readOnly = true; namaEl.style.background = '#f0f0f0'; namaEl.style.cursor = 'not-allowed'; namaEl.setAttribute('title', 'Hubungi admin untuk mengubah nama'); }
@@ -302,7 +314,8 @@
   }
 
   function loadJadwalData() {
-    const tbody = document.getElementById('tbody-jadwal'); if(!tbody) return;
+    const tbody = document.getElementById('tbody-jadwal'); 
+    if(!tbody) return;
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Memuat jadwal...</td></tr>';
     apiCall('getJadwalList')
       .then(res => {
@@ -317,7 +330,6 @@
   }
 
   function buildAksiJadwal(jdw) {
-    const statusLower = (jdw.Status || 'terjadwal').toLowerCase();
     let aBtn = "";
 
     if(isManajemen()) {
@@ -354,7 +366,9 @@
   }
 
   function renderJadwalTable() {
-    const tbody = document.getElementById('tbody-jadwal'); tbody.innerHTML = '';
+    const tbody = document.getElementById('tbody-jadwal'); 
+    if (!tbody) return;
+    tbody.innerHTML = '';
     let vw = APP_STATE.jadwals;
     if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(j => j.NamaGuru === APP_STATE.user.Nama); }
     if(APP_STATE.user.Role === 'SUPERVISOR') { vw = vw.filter(j => j.Supervisor === APP_STATE.user.Nama); }
@@ -370,13 +384,15 @@
   }
 
   function filterJadwalTable() {
-    const kw = document.getElementById('search-jadwal').value.toLowerCase();
+    const kw = (document.getElementById('search-jadwal').value || '').toLowerCase();
     let vw = APP_STATE.jadwals;
     if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(j => j.NamaGuru === APP_STATE.user.Nama); }
     if(APP_STATE.user.Role === 'SUPERVISOR') { vw = vw.filter(j => j.Supervisor === APP_STATE.user.Nama); }
     const flt = vw.filter(j => (j.NamaGuru && j.NamaGuru.toLowerCase().includes(kw)) || (j.Kelas && j.Kelas.toLowerCase().includes(kw)) || (j.Supervisor && j.Supervisor.toLowerCase().includes(kw)));
     
-    const tbody = document.getElementById('tbody-jadwal'); tbody.innerHTML = '';
+    const tbody = document.getElementById('tbody-jadwal'); 
+    if (!tbody) return;
+    tbody.innerHTML = '';
     if(flt.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tidak ada data.</td></tr>'; return; }
     
     flt.forEach(jdw => {
@@ -487,6 +503,7 @@
 
   function populateGuruSelect() {
     const s = document.getElementById('jdw-guru');
+    if (!s) return;
     s.innerHTML = '<option value="">-- Pilih Guru --</option>';
     if(APP_STATE.gurus.length === 0) { s.innerHTML = '<option value="">(Data kosong)</option>'; return; }
     APP_STATE.gurus.forEach(g => {
@@ -668,9 +685,12 @@
   // 6. MODUL OBSERVASI & INSTRUMEN
   // ==========================================
   function loadSiapObservasi() {
-    document.getElementById('obs-list-view').style.display = 'block';
-    document.getElementById('obs-form-view').style.display = 'none';
-    const tbody = document.getElementById('tbody-siap-observasi'); if(!tbody) return;
+    const listView = document.getElementById('obs-list-view');
+    const formView = document.getElementById('obs-form-view');
+    if (listView) listView.style.display = 'block';
+    if (formView) formView.style.display = 'none';
+    const tbody = document.getElementById('tbody-siap-observasi'); 
+    if(!tbody) return;
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Mencari jadwal...</td></tr>';
     
     apiCall('getJadwalList')
@@ -687,18 +707,23 @@
 
   function mulaiObservasi(jadwalID) {
     const jadwal = APP_STATE.jadwals.find(j => j.JadwalID === jadwalID);
+    if (!jadwal) return;
     APP_STATE.activeJadwal = jadwal;
+    
     document.getElementById('obs-list-view').style.display = 'none';
     document.getElementById('obs-form-view').style.display = 'block';
+    
     const judulEl = document.getElementById('obs-judul');
     if (judulEl) judulEl.innerText = jadwal.JenisSupervisi === 'Administrasi' ? 'Lembar Supervisi Administrasi' : 'Lembar Observasi Pembelajaran';
     document.getElementById('obs-header-guru').innerText = `${jadwal.NamaGuru} - ${jadwal.JenisSupervisi}`;
     document.getElementById('formObservasi').reset();
-    const linkDok = document.getElementById('obs-link-dok'); if(linkDok) linkDok.style.display = 'none';
+    
+    const linkDok = document.getElementById('obs-link-dok'); 
+    if (linkDok) linkDok.style.display = 'none';
+    
     const container = document.getElementById('instrumen-container');
     container.innerHTML = '<div style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Memuat instrumen...</div>';
-        
-    // Prefill Topik dari jadwal
+    
     const topikEl = document.getElementById('obs-topik');
     if (topikEl) topikEl.value = jadwal.Topik || '';
     
@@ -710,11 +735,13 @@
           .then(dRes => {
             if(dRes && dRes.status === 'success' && dRes.data) {
               const draft = dRes.data;
-              // Kalau draft punya Topik, override dari jadwal
               if (topikEl && draft.Topik) topikEl.value = draft.Topik;
               document.getElementById('obs-kekuatan').value = draft.KekuatanGuru || "";
               document.getElementById('obs-pengembangan').value = draft.AreaPengembangan || "";
-              if(linkDok && draft.Dokumentasi && draft.Dokumentasi !== "") { linkDok.href = draft.Dokumentasi; linkDok.style.display = 'inline-block'; }
+              if(linkDok && draft.Dokumentasi && draft.Dokumentasi !== "") { 
+                linkDok.href = draft.Dokumentasi; 
+                linkDok.style.display = 'inline-block'; 
+              }
               if(draft.DetailNilai) {
                 draft.DetailNilai.forEach(dn => {
                   const radio = document.querySelector(`input[name="ins_${dn.InstrumenID}"][value="${dn.Skor}"]`);
@@ -732,7 +759,8 @@
   function batalObservasi() { APP_STATE.activeJadwal = null; loadSiapObservasi(); }
 
   function renderFormInstrumen() {
-    const container = document.getElementById('instrumen-container'); container.innerHTML = '';
+    const container = document.getElementById('instrumen-container'); 
+    container.innerHTML = '';
     if(APP_STATE.instrumens.length === 0) { container.innerHTML = '<div style="color:red; text-align:center; padding:20px;">Instrumen belum disetting.</div>'; return; }
     APP_STATE.instrumens.forEach((ins, idx) => {
       const field = `ins_${ins.InstrumenID}`;
@@ -757,7 +785,23 @@
     let predikat = "Perlu Pengembangan";
     if(nilaiAkhir >= 91) predikat = "Sangat Baik"; else if(nilaiAkhir >= 81) predikat = "Baik"; else if(nilaiAkhir >= 71) predikat = "Cukup";
     
-    const formData = { JadwalID: jdw.JadwalID, GuruID: jdw.GuruID, SupervisorID: APP_STATE.user.UserID, MataPelajaran: jdw.MataPelajaran, Kelas: jdw.Kelas, Topik: document.getElementById('obs-topik').value, KekuatanGuru: document.getElementById('obs-kekuatan').value, AreaPengembangan: document.getElementById('obs-pengembangan').value, Kesimpulan: "-", TotalSkor: totalSkor, NilaiAkhir: nilaiAkhir, Predikat: predikat, StatusSubmit: statusAction, DetailNilai: detailNilai, DokumentasiURL: "" };
+    const formData = { 
+      JadwalID: jdw.JadwalID, 
+      GuruID: jdw.GuruID, 
+      SupervisorID: APP_STATE.user.UserID, 
+      MataPelajaran: jdw.MataPelajaran, 
+      Kelas: jdw.Kelas, 
+      Topik: document.getElementById('obs-topik').value,
+      KekuatanGuru: document.getElementById('obs-kekuatan').value, 
+      AreaPengembangan: document.getElementById('obs-pengembangan').value, 
+      Kesimpulan: "-", 
+      TotalSkor: totalSkor, 
+      NilaiAkhir: nilaiAkhir, 
+      Predikat: predikat, 
+      StatusSubmit: statusAction, 
+      DetailNilai: detailNilai, 
+      DokumentasiURL: "" 
+    };
     
     const btnDraft = document.getElementById('btn-draft-obs');
     const btnSubmit = document.getElementById('btn-submit-obs');
@@ -799,7 +843,8 @@
   // 7. MODUL TINDAK LANJUT
   // ==========================================
   function loadTindakLanjutData() {
-    const tbody = document.getElementById('tbody-tl'); if(!tbody) return;
+    const tbody = document.getElementById('tbody-tl'); 
+    if(!tbody) return;
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
     apiCall('getObservasiSelesai')
       .then(res => {
@@ -809,7 +854,9 @@
   }
 
   function renderTLTable() {
-    const tbody = document.getElementById('tbody-tl'); tbody.innerHTML = '';
+    const tbody = document.getElementById('tbody-tl'); 
+    if (!tbody) return;
+    tbody.innerHTML = '';
     let vw = APP_STATE.tindakLanjut || [];
     if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(o => o.GuruID === APP_STATE.user.GuruID || o.NamaGuru === APP_STATE.user.Nama); }
     if(APP_STATE.user.Role === 'SUPERVISOR') { vw = vw.filter(o => o.Supervisor === APP_STATE.user.Nama); }
@@ -821,19 +868,20 @@
   }
 
   function filterTLTable() {
-    const kw = document.getElementById('search-tl').value.toLowerCase();
+    const kw = (document.getElementById('search-tl').value || '').toLowerCase();
     let vw = APP_STATE.tindakLanjut || [];
     if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(o => o.GuruID === APP_STATE.user.GuruID || o.NamaGuru === APP_STATE.user.Nama); }
     if(APP_STATE.user.Role === 'SUPERVISOR') { vw = vw.filter(o => o.Supervisor === APP_STATE.user.Nama); }
     const flt = vw.filter(o => o.NamaGuru && o.NamaGuru.toLowerCase().includes(kw));
-    const tbody = document.getElementById('tbody-tl'); tbody.innerHTML = '';
+    const tbody = document.getElementById('tbody-tl'); 
+    if (!tbody) return;
+    tbody.innerHTML = '';
     flt.forEach(obs => {
       let bTL = obs.StatusTL === 'Selesai' ? 'badge-selesai' : (obs.StatusTL === 'Dalam Proses' ? 'badge-aktif' : 'badge-dibatalkan');
       tbody.innerHTML += `<tr><td>${formatTanggalIndo(obs.TanggalObservasi)}</td><td><strong>${obs.NamaGuru}</strong></td><td>${obs.MataPelajaran}<br><small>Kls: ${obs.Kelas}</small></td><td><strong>${obs.NilaiAkhir}</strong> / 100 <br><small>${obs.Predikat}</small></td><td><span class="badge ${bTL}">${obs.StatusTL}</span></td><td><button class="btn-sm btn-primary" onclick="openModalTL('${obs.ObservasiID}')"><i class="fas fa-search"></i> Evaluasi</button></td></tr>`;
     });
   }
 
-  // Helper: kunci/buka semua field TL kecuali status
   function lockTLFields(locked) {
     const fields = ['tl-temuan', 'tl-rekomendasi', 'tl-rencana', 'tl-target', 'tl-catatan'];
     fields.forEach(id => {
@@ -848,7 +896,8 @@
   }
 
   function openModalTL(obsID) {
-    const obs = APP_STATE.tindakLanjut.find(o => o.ObservasiID === obsID); if(!obs) return;
+    const obs = APP_STATE.tindakLanjut.find(o => o.ObservasiID === obsID); 
+    if(!obs) return;
     document.getElementById('tl-nama-guru').innerText = obs.NamaGuru;
     document.getElementById('tl-info-obs').innerText = `${obs.MataPelajaran} - Kelas ${obs.Kelas}`;
     document.getElementById('tl-nilai').innerText = obs.NilaiAkhir;
@@ -874,7 +923,6 @@
     const isGuruIniSendiri = APP_STATE.user.Role === 'GURU' && APP_STATE.user.Nama === obs.NamaGuru;
     
     if (isGuruIniSendiri) {
-      // GURU: kunci semua field kecuali Status
       lockTLFields(true);
       statusEl.disabled = false;
       statusEl.style.background = '';
@@ -883,7 +931,6 @@
       btnSave.style.display = 'block';
       btnSave.innerText = 'Update Status';
     } else {
-      // Supervisor/Manajemen: semua field editable
       lockTLFields(false);
       statusEl.disabled = false;
       statusEl.style.background = '';
@@ -977,13 +1024,14 @@
 
   function filterLaporanTable() {
     const jenisFilter = document.getElementById('filter-jenis-laporan').value;
-    const kw = document.getElementById('search-laporan').value.toLowerCase();
+    const kw = (document.getElementById('search-laporan').value || '').toLowerCase();
     let vw = APP_STATE.laporanDetail || [];
     if(APP_STATE.user.Role === 'GURU') vw = vw.filter(d => d.NamaGuru === APP_STATE.user.Nama);
     vw = vw.filter(d => d.JenisSupervisi === jenisFilter);
     if(kw) vw = vw.filter(d => d.NamaGuru.toLowerCase().includes(kw) || d.MataPelajaran.toLowerCase().includes(kw));
     APP_STATE.laporanView = vw;
-    const tbody = document.getElementById('tbody-laporan'); if(!tbody) return;
+    const tbody = document.getElementById('tbody-laporan'); 
+    if(!tbody) return;
     tbody.innerHTML = '';
     if(vw.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Tidak ada data pada kategori ini.</td></tr>'; return; }
     vw.forEach(item => {
@@ -1005,11 +1053,10 @@
     }
   }
 
-    function exportToExcel() {
+  function exportToExcel() {
     const data = APP_STATE.laporanView || [];
     if(data.length === 0) return showToast("Tidak ada data diekspor!", "error");
     
-    // Gunakan separator ; untuk Excel Indonesia
     let csv = "TANGGAL;NAMA GURU;MATA PELAJARAN;NILAI AKHIR;PREDIKAT;STATUS TINDAK LANJUT\n";
     data.forEach(item => {
       let tgl = formatTanggalIndo(item.Tanggal);
@@ -1018,7 +1065,6 @@
       csv += `"${tgl}";"${nama}";"${mapel}";${item.Nilai};"${item.Predikat}";"${item.StatusTL}"\n`;
     });
     
-    // Tambahkan BOM UTF-8 agar huruf beraksen tampil benar
     const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -1082,7 +1128,8 @@
   // 9. CRUD MANAJEMEN INSTRUMEN
   // ==========================================
   function loadInstrumenAdmin() {
-    const tbody = document.getElementById('tbody-instrumen'); if(!tbody) return;
+    const tbody = document.getElementById('tbody-instrumen'); 
+    if(!tbody) return;
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Memuat data instrumen...</td></tr>';
     apiCall('getInstrumenAll')
       .then(res => {
@@ -1091,7 +1138,9 @@
   }
 
   function renderInstrumenAdminTable() {
-    const tbody = document.getElementById('tbody-instrumen'); tbody.innerHTML = '';
+    const tbody = document.getElementById('tbody-instrumen'); 
+    if (!tbody) return;
+    tbody.innerHTML = '';
     if(!APP_STATE.allInstrumens || APP_STATE.allInstrumens.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Belum ada data instrumen.</td></tr>'; return; }
     APP_STATE.allInstrumens.forEach((ins) => {
       const bClass = ins.Status === 'Aktif' ? 'badge-aktif' : 'badge-nonaktif';
@@ -1103,7 +1152,8 @@
   function openModalInstrumen() { document.getElementById('formInstrumen').reset(); document.getElementById('ins-id').value = ''; document.getElementById('modal-title-instrumen').innerText = 'Tambah Instrumen'; document.getElementById('modal-instrumen').style.display = 'flex'; }
   function closeModalInstrumen() { document.getElementById('modal-instrumen').style.display = 'none'; }
   function editInstrumen(id) {
-    const ins = APP_STATE.allInstrumens.find(i => i.InstrumenID === id); if(!ins) return;
+    const ins = APP_STATE.allInstrumens.find(i => i.InstrumenID === id); 
+    if(!ins) return;
     document.getElementById('ins-id').value = ins.InstrumenID;
     document.getElementById('ins-jenis').value = ins.JenisInstrumen;
     document.getElementById('ins-aspek').value = ins.Aspek;
@@ -1130,7 +1180,8 @@
   // 10. MODUL DATA SUPERVISOR
   // ==========================================
   function loadSupervisorData() {
-    const tbody = document.getElementById('tbody-supervisor'); if (!tbody) return;
+    const tbody = document.getElementById('tbody-supervisor'); 
+    if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
     apiCall('getGuruList')
       .then(res => {
@@ -1142,7 +1193,9 @@
   }
 
   function renderSupervisorTable(data) {
-    const tbody = document.getElementById('tbody-supervisor'); tbody.innerHTML = '';
+    const tbody = document.getElementById('tbody-supervisor'); 
+    if (!tbody) return;
+    tbody.innerHTML = '';
     if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Belum ada data guru.</td></tr>'; return; }
     data.forEach((guru, index) => {
       const isSup = ['true','yes','ya','1','aktif'].indexOf((guru.IsSupervisor||'').toString().trim().toLowerCase()) !== -1;
@@ -1157,7 +1210,7 @@
   }
 
   function filterSupervisorTable() {
-    const kw = document.getElementById('search-supervisor').value.toLowerCase();
+    const kw = (document.getElementById('search-supervisor').value || '').toLowerCase();
     const flt = APP_STATE.gurus.filter(g => (g.NamaGuru && g.NamaGuru.toLowerCase().includes(kw)) || (g.NIP_NBM && g.NIP_NBM.toString().toLowerCase().includes(kw)));
     renderSupervisorTable(flt);
   }
@@ -1253,12 +1306,10 @@
       });
   }
 
-      function initApp() {
+  function initApp() {
     document.getElementById('login-layout').style.display = 'none';
     document.getElementById('app-layout').style.display = 'flex';
     document.getElementById('welcome-user').innerText = APP_STATE.user.Nama + ' (' + APP_STATE.user.Role + ')';
-    const sideUser = document.getElementById('sidebar-user-name');
-    if (sideUser) sideUser.innerText = APP_STATE.user.Nama;
     renderSidebar();
     navigateTo('dashboard', 'Dashboard');
   }
