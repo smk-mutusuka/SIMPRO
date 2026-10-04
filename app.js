@@ -1232,10 +1232,12 @@
       });
   }
 
-  function initApp() {
+    function initApp() {
     document.getElementById('login-layout').style.display = 'none';
     document.getElementById('app-layout').style.display = 'flex';
     document.getElementById('welcome-user').innerText = APP_STATE.user.Nama + ' (' + APP_STATE.user.Role + ')';
+    const sideUser = document.getElementById('sidebar-user-name');
+    if (sideUser) sideUser.innerText = APP_STATE.user.Nama;
     renderSidebar();
     navigateTo('dashboard', 'Dashboard');
   }
