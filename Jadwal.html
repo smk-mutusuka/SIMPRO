@@ -3,13 +3,15 @@
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
       <h3 style="margin: 0; color: var(--primary-navy); font-size: 20px;"><i class="fas fa-calendar-alt"></i> Jadwal Supervisi</h3>
-      <div style="display: flex; gap: 10px;">
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <div class="search-box">
           <i class="fas fa-search" style="position: absolute; margin-left: 12px; margin-top: 12px; color: var(--text-muted);"></i>
           <input type="text" id="search-jadwal" placeholder="Cari Guru / Kelas..." class="form-control" style="padding-left: 35px; width: 220px;" onkeyup="filterJadwalTable()">
         </div>
-        <!-- Tombol ini akan disembunyikan via JS jika yang login adalah Guru -->
+        <!-- Tombol Buat Jadwal (langsung) — untuk ADMIN/KEPSEK/WAKAKUR -->
         <button class="btn btn-primary" style="width: auto;" onclick="openJadwalModal()" id="btn-add-jadwal"><i class="fas fa-plus"></i> Buat Jadwal</button>
+        <!-- Tombol Ajukan Jadwal — untuk GURU -->
+        <button class="btn btn-primary" style="width: auto; background: #16a085; border-color: #16a085;" onclick="openAjukanJadwalModal()" id="btn-ajukan-jadwal"><i class="fas fa-paper-plane"></i> Ajukan Jadwal</button>
       </div>
     </div>
     
@@ -32,6 +34,7 @@
   </div>
 </div>
 
+<!-- MODAL BUAT JADWAL LANGSUNG (Admin/KEPSEK/WAKAKUR) -->
 <div id="modal-jadwal" class="modal-overlay" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -85,12 +88,121 @@
         </div>
         
         <div class="form-group">
-          <label class="form-label">Supervisor Penilai (Guru / Admin)</label>
-          <!-- Admin yang mengetik manual nama supervisor-nya (bisa menunjuk sesama guru) -->
+          <label class="form-label">Supervisor Penilai</label>
           <input type="text" id="jdw-supervisor" class="form-control" placeholder="Masukkan nama penilai..." required>
         </div>
         
         <button type="submit" id="btn-save-jadwal" class="btn btn-primary" style="margin-top: 10px;">Simpan Jadwal</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AJUKAN JADWAL (GURU) -->
+<div id="modal-ajukan-jadwal" class="modal-overlay" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="margin:0; color: var(--primary-navy);">Ajukan Jadwal Supervisi</h3>
+      <button class="close-btn" onclick="closeAjukanJadwalModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: #e3f2fd; border-left: 4px solid var(--primary-blue); padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #1756a9;">
+        <i class="fas fa-info-circle"></i> Pengajuan Anda akan ditinjau oleh Kepala Sekolah / WKS Kurikulum sebelum disetujui.
+      </div>
+      <form id="formAjukanJadwal" onsubmit="submitAjukanJadwal(event)">
+        
+        <div class="form-group">
+          <label class="form-label">Jenis Supervisi</label>
+          <select id="aj-jenis" class="form-control" required>
+            <option value="Administrasi">Supervisi Administrasi (Telaah Perencanaan)</option>
+            <option value="Pelaksanaan">Supervisi Pelaksanaan Pembelajaran (Observasi)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mata Pelajaran</label>
+          <input type="text" id="aj-mapel" class="form-control" placeholder="Cth: Matematika" required>
+        </div>
+        
+        <div style="display:flex; gap: 15px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Kelas</label>
+            <input type="text" id="aj-kelas" class="form-control" placeholder="Cth: X TKR 1" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Ruang</label>
+            <input type="text" id="aj-ruang" class="form-control" placeholder="Cth: R.12" required>
+          </div>
+        </div>
+        
+        <div style="display:flex; gap: 15px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Tanggal Usulan</label>
+            <input type="date" id="aj-tanggal" class="form-control" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Jam Usulan</label>
+            <input type="time" id="aj-jam" class="form-control" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Catatan / Keterangan (Opsional)</label>
+          <textarea id="aj-catatan" class="form-control" rows="3" placeholder="Contoh: Mohon dijadwalkan pagi karena jam mengajar saya padat..."></textarea>
+        </div>
+        
+        <button type="submit" id="btn-submit-ajukan" class="btn btn-primary" style="margin-top: 10px;">Kirim Pengajuan</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL APPROVE JADWAL (KEPSEK/WAKAKUR) -->
+<div id="modal-approve-jadwal" class="modal-overlay" style="display:none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 style="margin:0; color: var(--primary-navy);">Setujui Pengajuan Jadwal</h3>
+      <button class="close-btn" onclick="closeApproveModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: #e8f5e9; border-left: 4px solid #28a745; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px;">
+        <strong id="apr-guru">Nama Guru</strong><br>
+        <small id="apr-info">Mapel - Kelas - Tanggal - Jam</small>
+      </div>
+      <form id="formApprove" onsubmit="submitApprove(event)">
+        <input type="hidden" id="apr-jadwal-id">
+        <div class="form-group">
+          <label class="form-label">Pilih Supervisor Penilai</label>
+          <select id="apr-supervisor" class="form-control" required>
+            <option value="">-- Memuat daftar guru... --</option>
+          </select>
+          <small style="color: var(--text-muted); display: block; margin-top: 5px;">Supervisor akan menerima tugas untuk mensupervisi guru ini.</small>
+        </div>
+        <button type="submit" id="btn-approve-submit" class="btn btn-primary" style="margin-top: 10px; background: #28a745; border-color: #28a745;">Setujui & Tunjuk Supervisor</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TOLAK JADWAL (KEPSEK/WAKAKUR) -->
+<div id="modal-tolak-jadwal" class="modal-overlay" style="display:none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 style="margin:0; color: var(--primary-navy);">Tolak Pengajuan Jadwal</h3>
+      <button class="close-btn" onclick="closeTolakModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: #ffebee; border-left: 4px solid #dc3545; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px;">
+        <strong id="tol-guru">Nama Guru</strong><br>
+        <small id="tol-info">Mapel - Kelas - Tanggal - Jam</small>
+      </div>
+      <form id="formTolak" onsubmit="submitTolak(event)">
+        <input type="hidden" id="tol-jadwal-id">
+        <div class="form-group">
+          <label class="form-label">Alasan Penolakan</label>
+          <textarea id="tol-catatan" class="form-control" rows="3" placeholder="Cth: Jadwal bentrok dengan kegiatan sekolah..." required></textarea>
+        </div>
+        <button type="submit" id="btn-tolak-submit" class="btn btn-primary" style="margin-top: 10px; background: #dc3545; border-color: #dc3545;">Tolak Pengajuan</button>
       </form>
     </div>
   </div>
