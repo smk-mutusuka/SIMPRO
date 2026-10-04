@@ -34,6 +34,8 @@ var POST_ACTIONS = [
   'saveTindakLanjut',
   // Drive
   'uploadFileToDrive'
+  'saveSupervisor',      // ← TAHAP C
+  'kirimWAReminder',     // ← TAHAP C
 ];
 
 // =============================================================
