@@ -54,7 +54,7 @@
     if(window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); }
     
     if(pageId === 'guru') loadGuruData(); 
-    if(pageId === 'jadwal') loadJadwalData(); 
+    if(pageId === 'jadwal') { updateTombolJadwal(); loadJadwalData(); }
     if(pageId === 'observasi') loadSiapObservasi(); 
     if(pageId === 'tindak-lanjut') loadTindakLanjutData(); 
     if(pageId === 'laporan' || pageId === 'dashboard') loadLaporanData();
@@ -164,7 +164,7 @@
     const tbody = document.getElementById('tbody-jadwal'); if(!tbody) return; tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Memuat jadwal...</td></tr>';
     google.script.run.withSuccessHandler(resStr => { const res = JSON.parse(resStr); if(res.status === 'success') { APP_STATE.jadwals = res.data; renderJadwalTable(); } }).getJadwalList();
   }
-  function renderJadwalTable() {
+    function renderJadwalTable() {
     const tbody = document.getElementById('tbody-jadwal'); tbody.innerHTML = '';
     let vw = APP_STATE.jadwals;
     if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(j => j.NamaGuru === APP_STATE.user.Nama); }
@@ -172,33 +172,83 @@
     if(vw.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada jadwal untuk Anda.</td></tr>'; return; }
     
     vw.forEach(jdw => {
-      let aBtn = ""; 
+      const statusLower = (jdw.Status || 'terjadwal').toLowerCase();
+      let aBtn = "";
+
+      // Admin/KEPSEK/WAKAKUR
       if(isManajemen()) {
-        aBtn += `<button class="btn-sm" style="background:#25D366; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAJadwal('${jdw.JadwalID}')"><i class="fab fa-whatsapp"></i> Kirim WA</button><br>`;
+        if (jdw.Status === 'Menunggu') {
+          aBtn += `<button class="btn-sm" style="background:#28a745; color:white; border:none; margin-bottom:4px; width:100%;" onclick="openApproveModal('${jdw.JadwalID}')"><i class="fas fa-check"></i> Setujui</button><br>`;
+          aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; margin-bottom:4px; width:100%;" onclick="openTolakModal('${jdw.JadwalID}')"><i class="fas fa-times"></i> Tolak</button><br>`;
+        } else if (jdw.Status === 'Terjadwal') {
+          aBtn += `<button class="btn-sm" style="background:#25D366; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAJadwal('${jdw.JadwalID}')"><i class="fab fa-whatsapp"></i> Kirim WA</button><br>`;
+        }
         aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; width:100%;" onclick="konfirmasiHapusJadwal('${jdw.JadwalID}')"><i class="fas fa-trash"></i> Hapus</button>`;
       }
+      
+      // Guru: bisa batalkan pengajuan sendiri jika status Menunggu/Ditolak
+      if(APP_STATE.user.Role === 'GURU' && (jdw.Status === 'Menunggu' || jdw.Status === 'Ditolak')) {
+        aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; width:100%;" onclick="batalkanPengajuanSaya('${jdw.JadwalID}')"><i class="fas fa-times"></i> Batalkan</button>`;
+      }
+      
       if(aBtn === "") aBtn = "-";
       
-      tbody.innerHTML += `<tr><td><strong>${formatTanggalIndo(jdw.Tanggal)}</strong><br><small><i class="far fa-clock"></i> ${formatWaktuIndo(jdw.Jam)}</small></td><td><strong>${jdw.NamaGuru}</strong><br><small>${jdw.JenisSupervisi}</small></td><td>${jdw.MataPelajaran}</td><td>${jdw.Kelas} <br><small>(${jdw.Ruang})</small></td><td>${jdw.Supervisor}</td><td><span class="badge badge-${jdw.Status.toLowerCase()}">${jdw.Status}</span></td><td>${aBtn}</td></tr>`;
+      // Status tambahan di kolom: tampilkan catatan approval kalau ada
+      let statusBadge = `<span class="badge badge-${statusLower}">${jdw.Status}</span>`;
+      if (jdw.Status === 'Ditolak' && jdw.CatatanApproval) {
+        statusBadge += `<br><small style="color:#dc3545; font-size: 11px;">${jdw.CatatanApproval}</small>`;
+      }
+      if (jdw.Status === 'Menunggu' && jdw.CatatanPengajuan) {
+        statusBadge += `<br><small style="color:#f57c00; font-size: 11px;"><i class="fas fa-comment"></i> ${jdw.CatatanPengajuan}</small>`;
+      }
+      
+      const supervisorText = jdw.Supervisor && jdw.Supervisor !== "" ? jdw.Supervisor : '<em style="color:#999;">Belum ditunjuk</em>';
+      
+      tbody.innerHTML += `<tr><td><strong>${formatTanggalIndo(jdw.Tanggal)}</strong><br><small><i class="far fa-clock"></i> ${formatWaktuIndo(jdw.Jam)}</small></td><td><strong>${jdw.NamaGuru}</strong><br><small>${jdw.JenisSupervisi}</small></td><td>${jdw.MataPelajaran}</td><td>${jdw.Kelas} <br><small>(${jdw.Ruang})</small></td><td>${supervisorText}</td><td>${statusBadge}</td><td>${aBtn}</td></tr>`;
     });
   }
 
-  function filterJadwalTable() {
-    const kw = document.getElementById('search-jadwal').value.toLowerCase(); let vw = APP_STATE.jadwals;
+    function filterJadwalTable() {
+    const kw = document.getElementById('search-jadwal').value.toLowerCase();
+    let vw = APP_STATE.jadwals;
     if(APP_STATE.user.Role === 'GURU') { vw = vw.filter(j => j.NamaGuru === APP_STATE.user.Nama); }
     if(APP_STATE.user.Role === 'SUPERVISOR') { vw = vw.filter(j => j.Supervisor === APP_STATE.user.Nama); }
     const flt = vw.filter(j => (j.NamaGuru && j.NamaGuru.toLowerCase().includes(kw)) || (j.Kelas && j.Kelas.toLowerCase().includes(kw)) || (j.Supervisor && j.Supervisor.toLowerCase().includes(kw)));
+    
     const tbody = document.getElementById('tbody-jadwal'); tbody.innerHTML = '';
     if(flt.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tidak ada data.</td></tr>'; return; }
     
-    flt.forEach(jdw => { 
-      let aBtn = ""; 
+    flt.forEach(jdw => {
+      const statusLower = (jdw.Status || 'terjadwal').toLowerCase();
+      let aBtn = "";
+
       if(isManajemen()) {
-        aBtn += `<button class="btn-sm" style="background:#25D366; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAJadwal('${jdw.JadwalID}')"><i class="fab fa-whatsapp"></i> Kirim WA</button><br>`;
+        if (jdw.Status === 'Menunggu') {
+          aBtn += `<button class="btn-sm" style="background:#28a745; color:white; border:none; margin-bottom:4px; width:100%;" onclick="openApproveModal('${jdw.JadwalID}')"><i class="fas fa-check"></i> Setujui</button><br>`;
+          aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; margin-bottom:4px; width:100%;" onclick="openTolakModal('${jdw.JadwalID}')"><i class="fas fa-times"></i> Tolak</button><br>`;
+        } else if (jdw.Status === 'Terjadwal') {
+          aBtn += `<button class="btn-sm" style="background:#25D366; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAJadwal('${jdw.JadwalID}')"><i class="fab fa-whatsapp"></i> Kirim WA</button><br>`;
+        }
         aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; width:100%;" onclick="konfirmasiHapusJadwal('${jdw.JadwalID}')"><i class="fas fa-trash"></i> Hapus</button>`;
       }
+      
+      if(APP_STATE.user.Role === 'GURU' && (jdw.Status === 'Menunggu' || jdw.Status === 'Ditolak')) {
+        aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; width:100%;" onclick="batalkanPengajuanSaya('${jdw.JadwalID}')"><i class="fas fa-times"></i> Batalkan</button>`;
+      }
+      
       if(aBtn === "") aBtn = "-";
-      tbody.innerHTML += `<tr><td><strong>${formatTanggalIndo(jdw.Tanggal)}</strong><br><small><i class="far fa-clock"></i> ${formatWaktuIndo(jdw.Jam)}</small></td><td><strong>${jdw.NamaGuru}</strong><br><small>${jdw.JenisSupervisi}</small></td><td>${jdw.MataPelajaran}</td><td>${jdw.Kelas} <br><small>(${jdw.Ruang})</small></td><td>${jdw.Supervisor}</td><td><span class="badge badge-${jdw.Status.toLowerCase()}">${jdw.Status}</span></td><td>${aBtn}</td></tr>`; 
+      
+      let statusBadge = `<span class="badge badge-${statusLower}">${jdw.Status}</span>`;
+      if (jdw.Status === 'Ditolak' && jdw.CatatanApproval) {
+        statusBadge += `<br><small style="color:#dc3545; font-size: 11px;">${jdw.CatatanApproval}</small>`;
+      }
+      if (jdw.Status === 'Menunggu' && jdw.CatatanPengajuan) {
+        statusBadge += `<br><small style="color:#f57c00; font-size: 11px;"><i class="fas fa-comment"></i> ${jdw.CatatanPengajuan}</small>`;
+      }
+      
+      const supervisorText = jdw.Supervisor && jdw.Supervisor !== "" ? jdw.Supervisor : '<em style="color:#999;">Belum ditunjuk</em>';
+      
+      tbody.innerHTML += `<tr><td><strong>${formatTanggalIndo(jdw.Tanggal)}</strong><br><small><i class="far fa-clock"></i> ${formatWaktuIndo(jdw.Jam)}</small></td><td><strong>${jdw.NamaGuru}</strong><br><small>${jdw.JenisSupervisi}</small></td><td>${jdw.MataPelajaran}</td><td>${jdw.Kelas} <br><small>(${jdw.Ruang})</small></td><td>${supervisorText}</td><td>${statusBadge}</td><td>${aBtn}</td></tr>`;
     });
   }
 
@@ -512,3 +562,180 @@
       initApp();
     }
   });
+
+  // ==========================================
+  // 11. MODUL PENGAJUAN JADWAL (TAHAP B)
+  // ==========================================
+  function updateTombolJadwal() {
+    const btnAdd = document.getElementById('btn-add-jadwal');
+    const btnAjukan = document.getElementById('btn-ajukan-jadwal');
+    if (!btnAdd || !btnAjukan) return;
+    if (isManajemen()) {
+      btnAdd.style.display = 'inline-block';
+      btnAjukan.style.display = 'none';
+    } else if (APP_STATE.user.Role === 'GURU') {
+      btnAdd.style.display = 'none';
+      btnAjukan.style.display = 'inline-block';
+    } else {
+      btnAdd.style.display = 'none';
+      btnAjukan.style.display = 'none';
+    }
+  }
+
+  function openAjukanJadwalModal() {
+    document.getElementById('formAjukanJadwal').reset();
+    document.getElementById('modal-ajukan-jadwal').style.display = 'flex';
+  }
+  function closeAjukanJadwalModal() {
+    document.getElementById('modal-ajukan-jadwal').style.display = 'none';
+  }
+
+  function submitAjukanJadwal(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit-ajukan');
+    btn.disabled = true;
+    btn.innerText = 'Mengirim...';
+    
+    const fd = {
+      GuruID: APP_STATE.user.GuruID || '',
+      NamaGuru: APP_STATE.user.Nama,
+      MataPelajaran: document.getElementById('aj-mapel').value,
+      Kelas: document.getElementById('aj-kelas').value,
+      Ruang: document.getElementById('aj-ruang').value,
+      Tanggal: document.getElementById('aj-tanggal').value,
+      Jam: document.getElementById('aj-jam').value,
+      JenisSupervisi: document.getElementById('aj-jenis').value,
+      CatatanPengajuan: document.getElementById('aj-catatan').value
+    };
+    
+    google.script.run.withSuccessHandler(r => {
+      const res = JSON.parse(r);
+      btn.disabled = false;
+      btn.innerText = 'Kirim Pengajuan';
+      if (res.status === 'success') {
+        showToast(res.message, 'success');
+        closeAjukanJadwalModal();
+        loadJadwalData();
+      } else {
+        showToast(res.message, 'error');
+      }
+    }).ajukanJadwal(fd);
+  }
+
+  // ===== APPROVE =====
+  function openApproveModal(jadwalID) {
+    const jdw = APP_STATE.jadwals.find(j => j.JadwalID === jadwalID);
+    if (!jdw) return;
+    document.getElementById('apr-jadwal-id').value = jadwalID;
+    document.getElementById('apr-guru').innerText = jdw.NamaGuru;
+    document.getElementById('apr-info').innerText = `${jdw.MataPelajaran} - ${jdw.Kelas} - ${formatTanggalIndo(jdw.Tanggal)} - ${formatWaktuIndo(jdw.Jam)}`;
+    
+    const sel = document.getElementById('apr-supervisor');
+    sel.innerHTML = '<option value="">-- Pilih Supervisor --</option>';
+    
+    // Load daftar guru (untuk sementara: semua guru aktif bisa jadi supervisor; nanti di TAHAP C difilter)
+    if (APP_STATE.gurus.length === 0) {
+      google.script.run.withSuccessHandler(r => {
+        const res = JSON.parse(r);
+        if (res.status === 'success') {
+          APP_STATE.gurus = res.data;
+          populateSupervisorSelect(jdw.NamaGuru);
+        }
+      }).getGuruList();
+    } else {
+      populateSupervisorSelect(jdw.NamaGuru);
+    }
+    
+    document.getElementById('modal-approve-jadwal').style.display = 'flex';
+  }
+  
+  function populateSupervisorSelect(namaGuruDiSupervisi) {
+    const sel = document.getElementById('apr-supervisor');
+    sel.innerHTML = '<option value="">-- Pilih Supervisor --</option>';
+    APP_STATE.gurus.forEach(g => {
+      if ((g.StatusAktif || 'aktif').toString().toLowerCase().trim() === 'aktif' && g.NamaGuru !== namaGuruDiSupervisi) {
+        sel.innerHTML += `<option value="${g.NamaGuru}">${g.NamaGuru}</option>`;
+      }
+    });
+  }
+
+  function closeApproveModal() {
+    document.getElementById('modal-approve-jadwal').style.display = 'none';
+  }
+
+  function submitApprove(e) {
+    e.preventDefault();
+    const jadwalID = document.getElementById('apr-jadwal-id').value;
+    const supervisorNama = document.getElementById('apr-supervisor').value;
+    if (!supervisorNama) return showToast('Pilih supervisor terlebih dahulu.', 'error');
+    
+    const btn = document.getElementById('btn-approve-submit');
+    btn.disabled = true;
+    btn.innerText = 'Menyetujui...';
+    
+    google.script.run.withSuccessHandler(r => {
+      const res = JSON.parse(r);
+      btn.disabled = false;
+      btn.innerText = 'Setujui & Tunjuk Supervisor';
+      if (res.status === 'success') {
+        showToast(res.message, 'success');
+        closeApproveModal();
+        loadJadwalData();
+      } else {
+        showToast(res.message, 'error');
+      }
+    }).approveJadwal(jadwalID, supervisorNama);
+  }
+
+  // ===== TOLAK =====
+  function openTolakModal(jadwalID) {
+    const jdw = APP_STATE.jadwals.find(j => j.JadwalID === jadwalID);
+    if (!jdw) return;
+    document.getElementById('tol-jadwal-id').value = jadwalID;
+    document.getElementById('tol-guru').innerText = jdw.NamaGuru;
+    document.getElementById('tol-info').innerText = `${jdw.MataPelajaran} - ${jdw.Kelas} - ${formatTanggalIndo(jdw.Tanggal)} - ${formatWaktuIndo(jdw.Jam)}`;
+    document.getElementById('tol-catatan').value = '';
+    document.getElementById('modal-tolak-jadwal').style.display = 'flex';
+  }
+
+  function closeTolakModal() {
+    document.getElementById('modal-tolak-jadwal').style.display = 'none';
+  }
+
+  function submitTolak(e) {
+    e.preventDefault();
+    const jadwalID = document.getElementById('tol-jadwal-id').value;
+    const catatan = document.getElementById('tol-catatan').value;
+    
+    const btn = document.getElementById('btn-tolak-submit');
+    btn.disabled = true;
+    btn.innerText = 'Menolak...';
+    
+    google.script.run.withSuccessHandler(r => {
+      const res = JSON.parse(r);
+      btn.disabled = false;
+      btn.innerText = 'Tolak Pengajuan';
+      if (res.status === 'success') {
+        showToast(res.message, 'success');
+        closeTolakModal();
+        loadJadwalData();
+      } else {
+        showToast(res.message, 'error');
+      }
+    }).tolakJadwal(jadwalID, catatan);
+  }
+
+  // ===== GURU BATALKAN =====
+  function batalkanPengajuanSaya(jadwalID) {
+    if (!confirm("Yakin ingin membatalkan pengajuan jadwal ini?")) return;
+    showToast("Membatalkan...", "info");
+    google.script.run.withSuccessHandler(r => {
+      const res = JSON.parse(r);
+      if (res.status === 'success') {
+        showToast(res.message, 'success');
+        loadJadwalData();
+      } else {
+        showToast(res.message, 'error');
+      }
+    }).batalkanPengajuan(jadwalID);
+  }
