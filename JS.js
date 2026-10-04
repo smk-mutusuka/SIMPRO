@@ -12,7 +12,8 @@
     { id: 'observasi',     icon: 'fas fa-eye',                title: 'Observasi & Instrumen',  roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR'] },
     { id: 'tindak-lanjut', icon: 'fas fa-sync-alt',           title: 'Tindak Lanjut',          roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM', 'SUPERVISOR', 'GURU'] },
     { id: 'laporan',       icon: 'fas fa-chart-pie',          title: 'Laporan',                roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] },
-    { id: 'instrumen',     icon: 'fas fa-list-ul',            title: 'Manajemen Instrumen',    roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] }
+    { id: 'instrumen',     icon: 'fas fa-list-ul',            title: 'Manajemen Instrumen',    roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] },
+    { id: 'supervisor',    icon: 'fas fa-user-tie',           title: 'Data Supervisor',        roles: ['ADMIN', 'KEPALA_SEKOLAH', 'WKS_KURIKULUM'] }
   ];
 
   function isManajemen() {
@@ -69,6 +70,7 @@
     if(pageId === 'tindak-lanjut') loadTindakLanjutData(); 
     if(pageId === 'laporan' || pageId === 'dashboard') loadLaporanData();
     if(pageId === 'instrumen') loadInstrumenAdmin();
+    if(pageId === 'supervisor') loadSupervisorData();
   }
 
   function renderSidebar() {
@@ -130,7 +132,9 @@
       const mapelList = (guru.MataPelajaran || '').toString().split(',').map(s => s.trim()).filter(s => s !== '');
       const mapelHtml = mapelList.length > 0 ? mapelList.join('<br>') : '-';
       
-      tbody.innerHTML += `<tr><td>${index+1}</td><td>${guru.NIP_NBM || '-'}</td><td><strong>${guru.NamaGuru || '-'}</strong></td><td>${noWAHtml}</td><td>${mapelHtml}</td><td><span class="badge ${bClass}">${guru.StatusAktif || 'Aktif'}</span></td><td>${actBtn}</td></tr>`;
+      const isSup = ['true','yes','ya','1','aktif'].indexOf((guru.IsSupervisor||'').toString().trim().toLowerCase()) !== -1;
+      const supBadge = isSup ? ' <i class="fas fa-user-tie" style="color:#16a085;" title="Supervisor"></i>' : '';
+      tbody.innerHTML += `<tr><td>${index+1}</td><td>${guru.NIP_NBM || '-'}</td><td><strong>${guru.NamaGuru || '-'}</strong>${supBadge}</td><td>${noWAHtml}</td><td>${mapelHtml}</td><td><span class="badge ${bClass}">${guru.StatusAktif || 'Aktif'}</span></td><td>${actBtn}</td></tr>`;
     });
   }
 
@@ -853,6 +857,82 @@
     navigateTo('dashboard', 'Dashboard');
   }
 
+  // ==========================================
+  // 11. MODUL DATA SUPERVISOR (TAHAP C2)
+  // ==========================================
+  function loadSupervisorData() {
+    const tbody = document.getElementById('tbody-supervisor');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>';
+    
+    apiCall('getGuruList')
+      .then(res => {
+        if (!res || res.status !== 'success') {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Gagal memuat data guru.</td></tr>';
+          return;
+        }
+        APP_STATE.gurus = res.data;
+        renderSupervisorTable(res.data);
+      })
+      .catch(err => {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#dc3545;">Error: ' + err.message + '</td></tr>';
+      });
+  }
+
+  function renderSupervisorTable(data) {
+    const tbody = document.getElementById('tbody-supervisor');
+    tbody.innerHTML = '';
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Belum ada data guru.</td></tr>';
+      return;
+    }
+    
+    data.forEach((guru, index) => {
+      const isSup = ['true','yes','ya','1','aktif'].indexOf((guru.IsSupervisor||'').toString().trim().toLowerCase()) !== -1;
+      const badgeSup = isSup
+        ? '<span class="badge" style="background:#e0f2f1; color:#00796b;"><i class="fas fa-check-circle"></i> Supervisor</span>'
+        : '<span class="badge" style="background:#f5f5f5; color:#666;"><i class="fas fa-minus-circle"></i> Bukan</span>';
+      
+      const actBtn = isSup
+        ? `<button class="btn-sm" style="background:#dc3545; color:white; border:none;" onclick="toggleSupervisor('${guru.GuruID}', false)"><i class="fas fa-user-minus"></i> Cabut</button>`
+        : `<button class="btn-sm" style="background:#16a085; color:white; border:none;" onclick="toggleSupervisor('${guru.GuruID}', true)"><i class="fas fa-user-plus"></i> Jadikan Supervisor</button>`;
+      
+      tbody.innerHTML += `<tr>
+        <td>${index+1}</td>
+        <td>${guru.NIP_NBM || '-'}</td>
+        <td><strong>${guru.NamaGuru || '-'}</strong></td>
+        <td>${guru.MataPelajaran || '-'}</td>
+        <td style="text-align:center;">${badgeSup}</td>
+        <td style="text-align:center;">${actBtn}</td>
+      </tr>`;
+    });
+  }
+
+  function filterSupervisorTable() {
+    const kw = document.getElementById('search-supervisor').value.toLowerCase();
+    const flt = APP_STATE.gurus.filter(g => 
+      (g.NamaGuru && g.NamaGuru.toLowerCase().includes(kw)) || 
+      (g.NIP_NBM && g.NIP_NBM.toString().toLowerCase().includes(kw))
+    );
+    renderSupervisorTable(flt);
+  }
+
+  function toggleSupervisor(guruID, jadikan) {
+    const txt = jadikan ? 'menjadikan guru ini sebagai SUPERVISOR?' : 'mencabut status SUPERVISOR guru ini?';
+    if (!confirm('Yakin ingin ' + txt)) return;
+    
+    showToast('Menyimpan...', 'info');
+    apiCall('saveSupervisor', guruID, jadikan)
+      .then(res => {
+        if (res && res.status === 'success') {
+          showToast(res.message, 'success');
+          loadSupervisorData();
+        } else {
+          showToast(res && res.message ? res.message : 'Gagal menyimpan', 'error');
+        }
+      })
+      .catch(err => showToast('Error: ' + err.message, 'error'));
+  }
   window.addEventListener('includes-loaded', function() {
     document.getElementById('app-layout').style.display = 'none';
     const su = sessionStorage.getItem('simpro_user');
