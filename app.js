@@ -1232,7 +1232,7 @@
       });
   }
 
-    function initApp() {
+      function initApp() {
     document.getElementById('login-layout').style.display = 'none';
     document.getElementById('app-layout').style.display = 'flex';
     document.getElementById('welcome-user').innerText = APP_STATE.user.Nama + ' (' + APP_STATE.user.Role + ')';
