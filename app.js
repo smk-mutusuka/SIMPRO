@@ -100,7 +100,7 @@
     if(pageId === 'supervisor') loadSupervisorData();
   }
 
-    function renderSidebar() {
+      function renderSidebar() {
     const menuContainer = document.getElementById('sidebar-menu'); 
     menuContainer.innerHTML = '';
     
