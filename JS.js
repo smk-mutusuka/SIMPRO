@@ -429,33 +429,48 @@
     }).ajukanJadwal(fd);
   }
 
-    function openApproveModal(jadwalID) {
+      function openApproveModal(jadwalID) {
     const jdw = APP_STATE.jadwals.find(j => j.JadwalID === jadwalID);
     if (!jdw) return;
     
     document.getElementById('apr-jadwal-id').value = jadwalID;
     document.getElementById('apr-guru').innerText = jdw.NamaGuru;
     document.getElementById('apr-info').innerText = `${jdw.MataPelajaran} - ${jdw.Kelas} - ${formatTanggalIndo(jdw.Tanggal)} - ${formatWaktuIndo(jdw.Jam)}`;
-    document.getElementById('apr-supervisor').innerHTML = '<option value="">-- Memuat daftar guru... --</option>';
     
+    const sel = document.getElementById('apr-supervisor');
+    sel.innerHTML = '<option value="">-- Memuat daftar guru... --</option>';
     document.getElementById('modal-approve-jadwal').style.display = 'flex';
     
-    // Selalu ambil data terbaru supaya dropdown dijamin terisi
-    google.script.run.withSuccessHandler(r => {
-      try {
-        const res = JSON.parse(r);
-        if (res.status === 'success' && res.data) {
-          APP_STATE.gurus = res.data;
-          populateSupervisorSelect(jdw.NamaGuru);
-        } else {
-          document.getElementById('apr-supervisor').innerHTML = '<option value="">-- Gagal memuat guru --</option>';
+    // Fetch fresh dari API
+    apiCall('getGuruList')
+      .then(res => {
+        console.log('[Approve] Total guru dari server:', res && res.data ? res.data.length : 0);
+        console.log('[Approve] Nama guru yang disupervisi:', jdw.NamaGuru);
+        
+        if (!res || res.status !== 'success' || !res.data) {
+          sel.innerHTML = '<option value="">-- Gagal memuat guru --</option>';
+          return;
         }
-      } catch (e) {
-        document.getElementById('apr-supervisor').innerHTML = '<option value="">-- Error: ' + e.message + ' --</option>';
-      }
-    }).withFailureHandler(err => {
-      document.getElementById('apr-supervisor').innerHTML = '<option value="">-- Error server --</option>';
-    }).getGuruList();
+        APP_STATE.gurus = res.data;
+        
+        sel.innerHTML = '<option value="">-- Pilih Supervisor --</option>';
+        let count = 0;
+        res.data.forEach(g => {
+          if (!g.NamaGuru) return;
+          if (jdw.NamaGuru && g.NamaGuru.toString().trim() === jdw.NamaGuru.toString().trim()) return;
+          sel.innerHTML += `<option value="${g.NamaGuru}">${g.NamaGuru}</option>`;
+          count++;
+        });
+        
+        console.log('[Approve] Yang masuk dropdown:', count);
+        if (count === 0) {
+          sel.innerHTML = '<option value="">-- Tidak ada guru lain --</option>';
+        }
+      })
+      .catch(err => {
+        console.error('[Approve] Error:', err);
+        sel.innerHTML = '<option value="">-- Error: ' + err.message + ' --</option>';
+      });
   }
   
     function populateSupervisorSelect(namaGuruDiSupervisi) {
