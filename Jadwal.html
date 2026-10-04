@@ -32,7 +32,7 @@
   </div>
 </div>
 
-<!-- MODAL BUAT JADWAL LANGSUNG (Admin/KEPSEK/WAKAKUR) -->
+<!-- MODAL BUAT JADWAL (Admin/KEPSEK/WAKAKUR) -->
 <div id="modal-jadwal" class="modal-overlay" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -61,6 +61,11 @@
         <div class="form-group">
           <label class="form-label">Mata Pelajaran</label>
           <input type="text" id="jdw-mapel" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Topik / Materi Pembelajaran</label>
+          <textarea id="jdw-topik" class="form-control" rows="3" placeholder="Cth: Penerapan Hukum Newton dalam kehidupan sehari-hari..." required></textarea>
         </div>
         
         <div style="display:flex; gap: 15px;">
@@ -139,6 +144,11 @@
           <input type="text" id="aj-mapel" class="form-control" placeholder="Cth: Matematika" required>
         </div>
         
+        <div class="form-group">
+          <label class="form-label">Topik / Materi Pembelajaran</label>
+          <textarea id="aj-topik" class="form-control" rows="3" placeholder="Cth: Penerapan Hukum Newton dalam kehidupan sehari-hari..." required></textarea>
+        </div>
+        
         <div style="display:flex; gap: 15px;">
           <div class="form-group" style="flex:1;">
             <label class="form-label">Kelas</label>
@@ -189,7 +199,7 @@
   </div>
 </div>
 
-<!-- MODAL APPROVE JADWAL (KEPSEK/WAKAKUR) -->
+<!-- MODAL APPROVE JADWAL -->
 <div id="modal-approve-jadwal" class="modal-overlay" style="display:none;">
   <div class="modal-content" style="max-width: 500px;">
     <div class="modal-header">
@@ -216,7 +226,7 @@
   </div>
 </div>
 
-<!-- MODAL TOLAK JADWAL (KEPSEK/WAKAKUR) -->
+<!-- MODAL TOLAK JADWAL -->
 <div id="modal-tolak-jadwal" class="modal-overlay" style="display:none;">
   <div class="modal-content" style="max-width: 500px;">
     <div class="modal-header">
