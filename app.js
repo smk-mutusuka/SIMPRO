@@ -358,9 +358,20 @@
     });
   }
 
-  function kirimWAJadwal(jadwalID) {
+    function kirimWAJadwal(jadwalID) {
     const jdw = APP_STATE.jadwals.find(j => j.JadwalID === jadwalID); if(!jdw) return;
-    if(APP_STATE.gurus.length === 0) { showToast("Menyiapkan kontak WA...", "info"); google.script.run.withSuccessHandler(r => { const res = JSON.parse(r); if(res.status === 'success') { APP_STATE.gurus = res.data; prosesKirimWA(jdw); } }).getGuruList(); } else { prosesKirimWA(jdw); }
+    showToast("Menyiapkan kontak WA...", "info");
+    // Selalu fetch fresh dari server biar No_WA terbaru
+    apiCall('getGuruList')
+      .then(res => {
+        if (res && res.status === 'success' && res.data) {
+          APP_STATE.gurus = res.data;
+          prosesKirimWA(jdw);
+        } else {
+          showToast('Gagal memuat data guru.', 'error');
+        }
+      })
+      .catch(err => showToast('Error: ' + err.message, 'error'));
   }
   function prosesKirimWA(jdw) {
     const guru = APP_STATE.gurus.find(g => g.GuruID === jdw.GuruID || g.NamaGuru === jdw.NamaGuru);
