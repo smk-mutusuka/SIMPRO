@@ -527,6 +527,7 @@
       GuruID: document.getElementById('jdw-guru').value,
       NamaGuru: document.getElementById('jdw-nama-guru').value,
       MataPelajaran: document.getElementById('jdw-mapel').value,
+      Topik: document.getElementById('jdw-topik').value,
       Kelas: document.getElementById('jdw-kelas').value,
       Ruang: document.getElementById('jdw-ruang').value,
       Tanggal: document.getElementById('jdw-tanggal').value,
