@@ -48,6 +48,7 @@
     const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.innerText = message; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
   }
   function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+  function safeSetText(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
 
   // Helper: ambil nomor WA dari objek guru dengan berbagai kemungkinan nama key
   function extractNoWA(guru) {
@@ -58,6 +59,24 @@
       if (v !== undefined && v !== null && v.toString().trim() !== '') return v.toString().trim();
     }
     return '';
+  }
+
+  // Helper: normalisasi nama (hapus tanda baca & spasi, lowercase)
+  function normalizeName(s) {
+    return (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  // Helper: normalisasi tanggal ke format YYYY-MM-DD (untuk input date)
+  function toInputDate(val) {
+    if (!val) return '';
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return val.toString();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return yyyy + '-' + mm + '-' + dd;
+    } catch(e) { return val ? val.toString() : ''; }
   }
 
   // ==========================================
@@ -163,12 +182,12 @@
     document.getElementById('formGuru').reset();
     safeSetValue('guru-id', '');
     safeSetValue('guru-nbm-lama', '');
-    const namaEl = document.getElementById('guru-nama');
-    if (namaEl) { namaEl.readOnly = false; namaEl.style.background = ''; namaEl.style.cursor = ''; } 
     const nbmEl = document.getElementById('guru-nbm');
     const statusEl = document.getElementById('guru-status');
-    if (nbmEl) { nbmEl.readOnly = false; nbmEl.style.background = ''; }
-    if (statusEl) { statusEl.disabled = false; statusEl.style.background = ''; }
+    const namaEl = document.getElementById('guru-nama');
+    if (nbmEl) { nbmEl.readOnly = false; nbmEl.style.background = ''; nbmEl.style.cursor = ''; }
+    if (statusEl) { statusEl.disabled = false; statusEl.style.background = ''; statusEl.style.pointerEvents = ''; statusEl.style.cursor = ''; }
+    if (namaEl) { namaEl.readOnly = false; namaEl.style.background = ''; namaEl.style.cursor = ''; }
     document.getElementById('modal-title-guru').innerText = 'Tambah Data Guru Baru';
     document.getElementById('modal-guru').style.display = 'flex';
   }
@@ -202,7 +221,7 @@
       if (statusEl) { statusEl.disabled = false; statusEl.style.background = ''; statusEl.style.pointerEvents = ''; statusEl.style.cursor = ''; }
       if (namaEl) { namaEl.readOnly = false; namaEl.style.background = ''; namaEl.style.cursor = ''; }
     } else {
-      // Untuk GURU: kunci Nama, NBM, Status
+      // GURU: kunci Nama, NBM, Status
       if (nbmEl) { nbmEl.readOnly = true; nbmEl.style.background = '#f0f0f0'; nbmEl.style.cursor = 'not-allowed'; }
       if (statusEl) { statusEl.disabled = true; statusEl.style.background = '#f0f0f0'; statusEl.style.pointerEvents = 'none'; statusEl.style.cursor = 'not-allowed'; statusEl.setAttribute('tabindex', '-1'); }
       if (namaEl) { namaEl.readOnly = true; namaEl.style.background = '#f0f0f0'; namaEl.style.cursor = 'not-allowed'; namaEl.setAttribute('title', 'Hubungi admin untuk mengubah nama'); }
@@ -364,11 +383,6 @@
     prosesKirimWA(jdw);
   }
 
-    // Helper normalisasi nama (hapus tanda baca & spasi)
-  function normalizeName(s) {
-    return (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
-  }
-
   function prosesKirimWA(jdw) {
     apiCall('getGuruList')
       .then(res => {
@@ -380,19 +394,15 @@
         const jNameNorm = normalizeName(jdw.NamaGuru);
         
         const guru = res.data.find(g => {
-          // Cek 1: GuruID (kalau ada)
           if (g.GuruID && jdw.GuruID && g.GuruID.toString() === jdw.GuruID.toString()) return true;
-          // Cek 2: Nama ternormalisasi
           if (g.NamaGuru && normalizeName(g.NamaGuru) === jNameNorm) return true;
           return false;
         });
         
         if (!guru) {
-          console.log('[WA-Guru] Tidak match. jdw.NamaGuru:', jdw.NamaGuru, '| Nama di sheet:', res.data.map(g => g.NamaGuru));
+          console.log('[WA-Guru] Tidak match. jdw.NamaGuru:', jdw.NamaGuru, '| Sheet:', res.data.map(g => g.NamaGuru));
           return showToast('Data guru tidak ditemukan.', 'error');
         }
-        
-        console.log('[WA-Guru] Match:', guru.NamaGuru);
         
         const noWA = extractNoWA(guru);
         if (!noWA) {
@@ -677,7 +687,6 @@
       .then(res => {
         APP_STATE.instrumens = (res.data || []).filter(ins => ins.JenisInstrumen === jadwal.JenisSupervisi);
         renderFormInstrumen();
-        // Load draft
         apiCall('getDraftObservasi', jadwalID)
           .then(dRes => {
             if(dRes && dRes.status === 'success' && dRes.data) {
@@ -803,6 +812,20 @@
     });
   }
 
+  // Helper: kunci/buka semua field TL kecuali status
+  function lockTLFields(locked) {
+    const fields = ['tl-temuan', 'tl-rekomendasi', 'tl-rencana', 'tl-target', 'tl-catatan'];
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.readOnly = locked;
+      el.style.background = locked ? '#f0f0f0' : '';
+      el.style.cursor = locked ? 'not-allowed' : '';
+      if (locked) el.setAttribute('tabindex', '-1');
+      else el.removeAttribute('tabindex');
+    });
+  }
+
   function openModalTL(obsID) {
     const obs = APP_STATE.tindakLanjut.find(o => o.ObservasiID === obsID); if(!obs) return;
     document.getElementById('tl-nama-guru').innerText = obs.NamaGuru;
@@ -811,24 +834,12 @@
     document.getElementById('tl-predikat').innerText = obs.Predikat;
     document.getElementById('tl-obs-id').value = obs.ObservasiID;
     document.getElementById('tl-guru-id').value = obs.GuruID;
+    
     if(obs.DataTL) {
       document.getElementById('tl-temuan').value = obs.DataTL.Temuan||'';
       document.getElementById('tl-rekomendasi').value = obs.DataTL.Rekomendasi||'';
       document.getElementById('tl-rencana').value = obs.DataTL.RencanaTindakLanjut||'';
-    // Normalize TargetTanggal ke format YYYY-MM-DD (yang dibutuhkan input date)
-      let tglTarget = obs.DataTL.TargetTanggal || '';
-      if (tglTarget) {
-        try {
-          const d = new Date(tglTarget);
-          if (!isNaN(d.getTime())) {
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            tglTarget = yyyy + '-' + mm + '-' + dd;
-          }
-        } catch(e) { /* biarkan apa adanya */ }
-      }
-      document.getElementById('tl-target').value = tglTarget;
+      document.getElementById('tl-target').value = toInputDate(obs.DataTL.TargetTanggal);
       document.getElementById('tl-status').value = obs.DataTL.Status||'Belum Dimulai';
       document.getElementById('tl-catatan').value = obs.DataTL.CatatanSupervisor||'';
     } else {
@@ -836,18 +847,31 @@
       document.getElementById('tl-obs-id').value = obs.ObservasiID;
       document.getElementById('tl-guru-id').value = obs.GuruID;
     }
+    
     const btnSave = document.getElementById('btn-save-tl');
-    if(APP_STATE.user.Role === 'GURU' && APP_STATE.user.Nama === obs.NamaGuru) {
-      btnSave.style.display = 'none';
-      document.getElementById('tl-temuan').readOnly = true;
-      document.getElementById('tl-rekomendasi').readOnly = true;
-      document.getElementById('tl-rencana').readOnly = true;
-    } else {
+    const statusEl = document.getElementById('tl-status');
+    const isGuruIniSendiri = APP_STATE.user.Role === 'GURU' && APP_STATE.user.Nama === obs.NamaGuru;
+    
+    if (isGuruIniSendiri) {
+      // GURU: kunci semua field kecuali Status
+      lockTLFields(true);
+      statusEl.disabled = false;
+      statusEl.style.background = '';
+      statusEl.style.cursor = '';
+      statusEl.style.pointerEvents = '';
       btnSave.style.display = 'block';
-      document.getElementById('tl-temuan').readOnly = false;
-      document.getElementById('tl-rekomendasi').readOnly = false;
-      document.getElementById('tl-rencana').readOnly = false;
+      btnSave.innerText = 'Update Status';
+    } else {
+      // Supervisor/Manajemen: semua field editable
+      lockTLFields(false);
+      statusEl.disabled = false;
+      statusEl.style.background = '';
+      statusEl.style.cursor = '';
+      statusEl.style.pointerEvents = '';
+      btnSave.style.display = 'block';
+      btnSave.innerText = 'Simpan Tindak Lanjut';
     }
+    
     document.getElementById('modal-tl').style.display = 'flex';
   }
 
@@ -865,7 +889,9 @@
       RencanaTindakLanjut: document.getElementById('tl-rencana').value,
       TargetTanggal: document.getElementById('tl-target').value,
       Status: document.getElementById('tl-status').value,
-      CatatanSupervisor: document.getElementById('tl-catatan').value
+      CatatanSupervisor: document.getElementById('tl-catatan').value,
+      CurrentUserRole: APP_STATE.user.Role,
+      CurrentUserNama: APP_STATE.user.Nama
     };
     apiCall('saveTindakLanjut', fd)
       .then(res => {
