@@ -429,37 +429,59 @@
     }).ajukanJadwal(fd);
   }
 
-  function openApproveModal(jadwalID) {
+    function openApproveModal(jadwalID) {
     const jdw = APP_STATE.jadwals.find(j => j.JadwalID === jadwalID);
     if (!jdw) return;
+    
     document.getElementById('apr-jadwal-id').value = jadwalID;
     document.getElementById('apr-guru').innerText = jdw.NamaGuru;
     document.getElementById('apr-info').innerText = `${jdw.MataPelajaran} - ${jdw.Kelas} - ${formatTanggalIndo(jdw.Tanggal)} - ${formatWaktuIndo(jdw.Jam)}`;
-    document.getElementById('apr-supervisor').innerHTML = '<option value="">-- Pilih Supervisor --</option>';
-    
-    if (APP_STATE.gurus.length === 0) {
-      google.script.run.withSuccessHandler(r => {
-        const res = JSON.parse(r);
-        if (res.status === 'success') {
-          APP_STATE.gurus = res.data;
-          populateSupervisorSelect(jdw.NamaGuru);
-        }
-      }).getGuruList();
-    } else {
-      populateSupervisorSelect(jdw.NamaGuru);
-    }
+    document.getElementById('apr-supervisor').innerHTML = '<option value="">-- Memuat daftar guru... --</option>';
     
     document.getElementById('modal-approve-jadwal').style.display = 'flex';
+    
+    // Selalu ambil data terbaru supaya dropdown dijamin terisi
+    google.script.run.withSuccessHandler(r => {
+      try {
+        const res = JSON.parse(r);
+        if (res.status === 'success' && res.data) {
+          APP_STATE.gurus = res.data;
+          populateSupervisorSelect(jdw.NamaGuru);
+        } else {
+          document.getElementById('apr-supervisor').innerHTML = '<option value="">-- Gagal memuat guru --</option>';
+        }
+      } catch (e) {
+        document.getElementById('apr-supervisor').innerHTML = '<option value="">-- Error: ' + e.message + ' --</option>';
+      }
+    }).withFailureHandler(err => {
+      document.getElementById('apr-supervisor').innerHTML = '<option value="">-- Error server --</option>';
+    }).getGuruList();
   }
   
-  function populateSupervisorSelect(namaGuruDiSupervisi) {
+    function populateSupervisorSelect(namaGuruDiSupervisi) {
     const sel = document.getElementById('apr-supervisor');
     sel.innerHTML = '<option value="">-- Pilih Supervisor --</option>';
+    
+    if (!APP_STATE.gurus || APP_STATE.gurus.length === 0) {
+      sel.innerHTML += '<option value="" disabled>(Data guru kosong)</option>';
+      return;
+    }
+    
+    let count = 0;
     APP_STATE.gurus.forEach(g => {
-      if ((g.StatusAktif || 'aktif').toString().toLowerCase().trim() === 'aktif' && g.NamaGuru !== namaGuruDiSupervisi) {
-        sel.innerHTML += `<option value="${g.NamaGuru}">${g.NamaGuru}</option>`;
-      }
+      if (!g.NamaGuru) return;
+      // Tampilkan semua guru, kecuali guru yang sedang disupervisi
+      if (namaGuruDiSupervisi && g.NamaGuru === namaGuruDiSupervisi) return;
+      
+      const statusTxt = (g.StatusAktif || 'Aktif').toString().trim();
+      const statusInfo = statusTxt !== 'Aktif' ? ' (' + statusTxt + ')' : '';
+      sel.innerHTML += `<option value="${g.NamaGuru}">${g.NamaGuru}${statusInfo}</option>`;
+      count++;
     });
+    
+    if (count === 0) {
+      sel.innerHTML = '<option value="">-- Tidak ada guru lain yang tersedia --</option>';
+    }
   }
 
   function closeApproveModal() { document.getElementById('modal-approve-jadwal').style.display = 'none'; }
