@@ -163,6 +163,8 @@
     document.getElementById('formGuru').reset();
     safeSetValue('guru-id', '');
     safeSetValue('guru-nbm-lama', '');
+    const namaEl = document.getElementById('guru-nama');
+    if (namaEl) { namaEl.readOnly = false; namaEl.style.background = ''; namaEl.style.cursor = ''; } 
     const nbmEl = document.getElementById('guru-nbm');
     const statusEl = document.getElementById('guru-status');
     if (nbmEl) { nbmEl.readOnly = false; nbmEl.style.background = ''; }
@@ -193,13 +195,17 @@
 
     const nbmEl = document.getElementById('guru-nbm');
     const statusEl = document.getElementById('guru-status');
+    const namaEl = document.getElementById('guru-nama');
     
     if (isManajemen()) {
       if (nbmEl) { nbmEl.readOnly = false; nbmEl.style.background = ''; nbmEl.style.cursor = ''; }
       if (statusEl) { statusEl.disabled = false; statusEl.style.background = ''; statusEl.style.pointerEvents = ''; statusEl.style.cursor = ''; }
+      if (namaEl) { namaEl.readOnly = false; namaEl.style.background = ''; namaEl.style.cursor = ''; }
     } else {
+      // Untuk GURU: kunci Nama, NBM, Status
       if (nbmEl) { nbmEl.readOnly = true; nbmEl.style.background = '#f0f0f0'; nbmEl.style.cursor = 'not-allowed'; }
       if (statusEl) { statusEl.disabled = true; statusEl.style.background = '#f0f0f0'; statusEl.style.pointerEvents = 'none'; statusEl.style.cursor = 'not-allowed'; statusEl.setAttribute('tabindex', '-1'); }
+      if (namaEl) { namaEl.readOnly = true; namaEl.style.background = '#f0f0f0'; namaEl.style.cursor = 'not-allowed'; namaEl.setAttribute('title', 'Hubungi admin untuk mengubah nama'); }
     }
 
     document.getElementById('modal-title-guru').innerText = isManajemen() ? 'Edit Data Guru' : 'Edit Data Saya';
