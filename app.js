@@ -358,8 +358,12 @@
     prosesKirimWA(jdw);
   }
 
+    // Helper normalisasi nama (hapus tanda baca & spasi)
+  function normalizeName(s) {
+    return (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
   function prosesKirimWA(jdw) {
-    // Selalu fetch fresh dari server untuk hindari cache
     apiCall('getGuruList')
       .then(res => {
         if (!res || res.status !== 'success' || !res.data) {
@@ -367,18 +371,22 @@
         }
         APP_STATE.gurus = res.data;
         
-        const guru = res.data.find(g => 
-          (g.GuruID && jdw.GuruID && g.GuruID.toString() === jdw.GuruID.toString()) || 
-          (g.NamaGuru && jdw.NamaGuru && g.NamaGuru.toString() === jdw.NamaGuru.toString())
-        );
+        const jNameNorm = normalizeName(jdw.NamaGuru);
+        
+        const guru = res.data.find(g => {
+          // Cek 1: GuruID (kalau ada)
+          if (g.GuruID && jdw.GuruID && g.GuruID.toString() === jdw.GuruID.toString()) return true;
+          // Cek 2: Nama ternormalisasi
+          if (g.NamaGuru && normalizeName(g.NamaGuru) === jNameNorm) return true;
+          return false;
+        });
         
         if (!guru) {
-          console.log('[WA-Guru] jdw:', jdw);
-          console.log('[WA-Guru] sample guru[0]:', res.data[0]);
+          console.log('[WA-Guru] Tidak match. jdw.NamaGuru:', jdw.NamaGuru, '| Nama di sheet:', res.data.map(g => g.NamaGuru));
           return showToast('Data guru tidak ditemukan.', 'error');
         }
         
-        console.log('[WA-Guru] Data guru:', guru);
+        console.log('[WA-Guru] Match:', guru.NamaGuru);
         
         const noWA = extractNoWA(guru);
         if (!noWA) {
