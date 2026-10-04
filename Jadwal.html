@@ -8,9 +8,7 @@
           <i class="fas fa-search" style="position: absolute; margin-left: 12px; margin-top: 12px; color: var(--text-muted);"></i>
           <input type="text" id="search-jadwal" placeholder="Cari Guru / Kelas..." class="form-control" style="padding-left: 35px; width: 220px;" onkeyup="filterJadwalTable()">
         </div>
-        <!-- Tombol Buat Jadwal (langsung) — untuk ADMIN/KEPSEK/WAKAKUR -->
         <button class="btn btn-primary" style="width: auto;" onclick="openJadwalModal()" id="btn-add-jadwal"><i class="fas fa-plus"></i> Buat Jadwal</button>
-        <!-- Tombol Ajukan Jadwal — untuk GURU -->
         <button class="btn btn-primary" style="width: auto; background: #16a085; border-color: #16a085;" onclick="openAjukanJadwalModal()" id="btn-ajukan-jadwal"><i class="fas fa-paper-plane"></i> Ajukan Jadwal</button>
       </div>
     </div>
@@ -68,7 +66,24 @@
         <div style="display:flex; gap: 15px;">
           <div class="form-group" style="flex:1;">
             <label class="form-label">Kelas</label>
-            <input type="text" id="jdw-kelas" class="form-control" placeholder="Cth: X TKR 1" required>
+            <select id="jdw-kelas" class="form-control" required>
+              <option value="">-- Pilih Kelas --</option>
+              <option value="XA Pemesinan">XA Pemesinan</option>
+              <option value="XA Pengelasan">XA Pengelasan</option>
+              <option value="XB TKR">XB TKR</option>
+              <option value="XB TSM">XB TSM</option>
+              <option value="XC TSM">XC TSM</option>
+              <option value="XIA Pemesinan">XIA Pemesinan</option>
+              <option value="XIA Pengelasan">XIA Pengelasan</option>
+              <option value="XIB TKR">XIB TKR</option>
+              <option value="XIB TSM">XIB TSM</option>
+              <option value="XIC TSM">XIC TSM</option>
+              <option value="XIIA Pemesinan">XIIA Pemesinan</option>
+              <option value="XIIB Pengelasan">XIIB Pengelasan</option>
+              <option value="XIIC TKR">XIIC TKR</option>
+              <option value="XIID TSM">XIID TSM</option>
+              <option value="XIIE TSM">XIIE TSM</option>
+            </select>
           </div>
           <div class="form-group" style="flex:1;">
             <label class="form-label">Ruang</label>
@@ -127,7 +142,24 @@
         <div style="display:flex; gap: 15px;">
           <div class="form-group" style="flex:1;">
             <label class="form-label">Kelas</label>
-            <input type="text" id="aj-kelas" class="form-control" placeholder="Cth: X TKR 1" required>
+            <select id="aj-kelas" class="form-control" required>
+              <option value="">-- Pilih Kelas --</option>
+              <option value="XA Pemesinan">XA Pemesinan</option>
+              <option value="XA Pengelasan">XA Pengelasan</option>
+              <option value="XB TKR">XB TKR</option>
+              <option value="XB TSM">XB TSM</option>
+              <option value="XC TSM">XC TSM</option>
+              <option value="XIA Pemesinan">XIA Pemesinan</option>
+              <option value="XIA Pengelasan">XIA Pengelasan</option>
+              <option value="XIB TKR">XIB TKR</option>
+              <option value="XIB TSM">XIB TSM</option>
+              <option value="XIC TSM">XIC TSM</option>
+              <option value="XIIA Pemesinan">XIIA Pemesinan</option>
+              <option value="XIIB Pengelasan">XIIB Pengelasan</option>
+              <option value="XIIC TKR">XIIC TKR</option>
+              <option value="XIID TSM">XIID TSM</option>
+              <option value="XIIE TSM">XIIE TSM</option>
+            </select>
           </div>
           <div class="form-group" style="flex:1;">
             <label class="form-label">Ruang</label>
