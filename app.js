@@ -285,7 +285,7 @@
         if (jdw.Status === 'Menunggu') {
           aBtn += `<button class="btn-sm" style="background:#28a745; color:white; border:none; margin-bottom:4px; width:100%;" onclick="openApproveModal('${jdw.JadwalID}')"><i class="fas fa-check"></i> Setujui</button><br>`;
           aBtn += `<button class="btn-sm" style="background:#dc3545; color:white; border:none; margin-bottom:4px; width:100%;" onclick="openTolakModal('${jdw.JadwalID}')"><i class="fas fa-times"></i> Tolak</button><br>`;
-       } else if (jdw.Status === 'Terjadwal') {
+         } else if (jdw.Status === 'Terjadwal') {
           aBtn += `<button class="btn-sm" style="background:#25D366; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAJadwal('${jdw.JadwalID}')"><i class="fab fa-whatsapp"></i> WA ke Guru</button><br>`;
           if (jdw.Supervisor && jdw.Supervisor.trim() !== '') {
             aBtn += `<button class="btn-sm" style="background:#16a085; color:white; border:none; margin-bottom:4px; width:100%;" onclick="kirimWAReminderKeSupervisor('${jdw.JadwalID}')"><i class="fas fa-user-tie"></i> WA ke Supervisor</button><br>`;
