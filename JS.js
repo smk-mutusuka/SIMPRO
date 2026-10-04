@@ -164,7 +164,7 @@
 
   function closeModalGuru() { document.getElementById('modal-guru').style.display = 'none'; }
 
-  function editGuru(guruID) {
+    function editGuru(guruID) {
     const guru = APP_STATE.gurus.find(g => g.GuruID === guruID); if(!guru) return;
     safeSetValue('guru-id', guru.GuruID);
     safeSetValue('guru-nbm-lama', guru.NIP_NBM);
@@ -182,15 +182,31 @@
       selectEl.value = (daftarOpsi.indexOf(jurusan) !== -1) ? jurusan : '';
     }
 
-    // Kalau GURU: readonly NBM & Status
     const nbmEl = document.getElementById('guru-nbm');
     const statusEl = document.getElementById('guru-status');
+    
     if (isManajemen()) {
-      if (nbmEl) { nbmEl.readOnly = false; nbmEl.style.background = ''; }
-      if (statusEl) { statusEl.disabled = false; statusEl.style.background = ''; }
+      if (nbmEl) { nbmEl.readOnly = false; nbmEl.style.background = ''; nbmEl.style.cursor = ''; }
+      if (statusEl) { 
+        statusEl.disabled = false; 
+        statusEl.style.background = ''; 
+        statusEl.style.pointerEvents = ''; 
+        statusEl.style.cursor = ''; 
+      }
     } else {
-      if (nbmEl) { nbmEl.readOnly = true; nbmEl.style.background = '#f0f0f0'; }
-      if (statusEl) { statusEl.disabled = true; statusEl.style.background = '#f0f0f0'; }
+      // Untuk GURU: kunci NBM & Status
+      if (nbmEl) { 
+        nbmEl.readOnly = true; 
+        nbmEl.style.background = '#f0f0f0'; 
+        nbmEl.style.cursor = 'not-allowed'; 
+      }
+      if (statusEl) { 
+        statusEl.disabled = true; 
+        statusEl.style.background = '#f0f0f0'; 
+        statusEl.style.pointerEvents = 'none'; 
+        statusEl.style.cursor = 'not-allowed';
+        statusEl.setAttribute('tabindex', '-1');
+      }
     }
 
     document.getElementById('modal-title-guru').innerText = isManajemen() ? 'Edit Data Guru' : 'Edit Data Saya';
