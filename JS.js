@@ -799,7 +799,7 @@
     else if (type === 'supervisor') document.getElementById('loginFormSupervisor').style.display = 'block';
   }
 
-  function handleLogin(type) {
+    function handleLogin(type) {
     const u = document.getElementById('username-' + type).value;
     const p = document.getElementById('password-' + type).value;
     const btn = document.getElementById('btn-login-' + type);
@@ -817,12 +817,34 @@
       btn.disabled = false;
       btn.innerText = 'Masuk';
       if (res.status === 'success') {
-        if (expectedRole.indexOf(res.data.Role) === -1) {
+        const roleAsli = res.data.Role;
+        const isSup = res.data.IsSupervisor === true;
+
+        // Validasi apakah boleh masuk di tab ini
+        let isValid = expectedRole.indexOf(roleAsli) !== -1;
+        
+        // Khusus tab Supervisor: terima juga role GURU yang punya flag IsSupervisor
+        if (type === 'supervisor' && roleAsli === 'GURU' && isSup) {
+          isValid = true;
+        }
+        // Khusus tab Guru: user dengan flag supervisor tetap bisa login sebagai guru
+        // (roleAsli = GURU → sudah masuk expectedRole)
+
+        if (!isValid) {
           const roleNames = { 'ADMIN': 'Admin', 'KEPALA_SEKOLAH': 'Kepala Sekolah', 'WKS_KURIKULUM': 'WKS Kurikulum', 'GURU': 'Guru', 'SUPERVISOR': 'Supervisor' };
-          const myRole = roleNames[res.data.Role] || res.data.Role;
+          const myRole = roleNames[roleAsli] || roleAsli;
           showToast('Akun Anda terdaftar sebagai ' + myRole + '. Silakan pilih tab login yang sesuai.', 'error');
           return;
         }
+
+        // Simpan role asli
+        res.data.OriginalRole = roleAsli;
+        
+        // Kalau login lewat tab supervisor, override Role jadi SUPERVISOR untuk sesi ini
+        if (type === 'supervisor') {
+          res.data.Role = 'SUPERVISOR';
+        }
+
         APP_STATE.user = res.data;
         APP_STATE.isLoggedIn = true;
         sessionStorage.setItem('simpro_user', JSON.stringify(res.data));
